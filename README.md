@@ -59,14 +59,14 @@ LivesRemaining-Labs/
 
 | Lab | Duration | Focus | Link |
 |-----|----------|-------|------|
-| **Lab 0** | 30 min | Generate synthetic events | [Start](docs/labs.md#lab-0-setup--sample-data-generation) |
-| **Lab 1** | 1 hr | Bronze ingestion (DLT Autoloader) | [Start](docs/labs.md#lab-1-bronze-ingestion-via-dlt-autoloader) |
-| **Lab 2** | 1.5 hr | Silver transformations & quality checks | [Start](docs/labs.md#lab-2-silver-transformations--quality-checks) |
-| **Lab 3** | 1.5 hr | Feature engineering for ML (Gold) | [Start](docs/labs.md#lab-3-feature-engineering-for-ml) |
-| **Lab 4** | 2 hr | Churn prediction with MLflow | [Start](docs/labs.md#lab-4-churn-prediction-with-mlflow) |
-| **Lab 5** | 1 hr | Batch scoring & predictions | [Start](docs/labs.md#lab-5-batch-scoring--predictions) |
-| **Lab 6** | 2 hr | Power BI dashboards | [Start](docs/labs.md#lab-6-power-bi-dashboards--fabric-integration) |
-| **Lab 7** (optional) | 1.5 hr | Real-time scoring endpoint | [Start](docs/labs.md#lab-7-real-time-scoring-endpoint-optional) |
+| **Lab 0** | 30 min | Generate synthetic events | [Start](docs/labs/lab-0-setup-data-generation.md) |
+| **Lab 1** | 1 hr | Bronze ingestion (DLT Autoloader) | [Start](docs/labs/lab-1-bronze-ingestion.md) |
+| **Lab 2** | 1.5 hr | Silver transformations & quality checks | [Start](docs/labs/lab-2-silver-transformations.md) |
+| **Lab 3** | 1.5 hr | Feature engineering for ML (Gold) | [Start](docs/labs/lab-3-feature-engineering.md) |
+| **Lab 4** | 2 hr | Churn prediction with MLflow | [Start](docs/labs/lab-4-churn-prediction.md) |
+| **Lab 5** | 1 hr | Batch scoring & predictions | [Start](docs/labs/lab-5-batch-scoring.md) |
+| **Lab 6** | 2 hr | Power BI dashboards | [Start](docs/labs/lab-6-powerbi-dashboards.md) |
+| **Lab 7** (optional) | 1.5 hr | Real-time scoring endpoint | [Start](docs/labs/lab-7-realtime-scoring.md) |
 
 👉 **[View full lab sequence →](docs/labs.md)**
 
