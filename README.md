@@ -29,6 +29,7 @@ LivesRemaining-Labs/
 ├── notebooks/             # Runnable lab examples
 │   ├── dlt/               # DLT Bronze/Silver/Gold labs
 │   ├── jobs/              # MLflow, scoring, serving labs
+│   ├── setup/             # Unity Catalog bootstrap notebook
 │   └── powerbi/           # Power BI/Fabric setup notebook
 ├── docs/                  # Architecture, lab guides, runbooks
 ├── data/                  # Sample datasets & synthetic event generators
@@ -49,16 +50,18 @@ LivesRemaining-Labs/
 ## Quick Start
 
 1. **Review** `docs/architecture.md` for design decisions
-2. **Complete labs** in order (see `docs/labs.md`)
-3. **Provision infra** via Terraform
-4. **Run DLT pipelines** to ingest and transform events
-5. **Train churn model** and set up scoring jobs
-6. **Build dashboards** in Power BI
+2. **Provision infra** via Terraform (`terraform/`) — workspace, ADLS Gen2, Unity Catalog
+3. **Bootstrap Unity Catalog** — `terraform apply` creates the `labs` catalog/schemas, or run `notebooks/setup/00_unity_catalog_setup.py`
+4. **Complete labs** in order (see `docs/labs.md`)
+5. **Run DLT pipelines** to ingest and transform events
+6. **Train churn model** and set up scoring jobs
+7. **Build dashboards** in Power BI
 
 ## Labs (7 total, ~10–11 hours)
 
 | Lab | Duration | Focus | Link |
 |-----|----------|-------|------|
+| **Setup** | 15 min | Unity Catalog bootstrap (catalog, schemas, grants) | [Start](docs/labs/prerequisites.md#provision--bootstrap) |
 | **Lab 0** | 30 min | Generate synthetic events | [Start](docs/labs/lab-0-setup-data-generation.md) |
 | **Lab 1** | 1 hr | Bronze ingestion (DLT Autoloader) | [Start](docs/labs/lab-1-bronze-ingestion.md) |
 | **Lab 2** | 1.5 hr | Silver transformations & quality checks | [Start](docs/labs/lab-2-silver-transformations.md) |

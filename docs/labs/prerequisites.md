@@ -10,6 +10,23 @@ Before starting labs, ensure you have:
 6. **Python 3.9+** installed locally
 7. **Azure CLI** authenticated (`az login`)
 
+## Provision & bootstrap
+
+1. **Provision infrastructure** with Terraform (`terraform/`) — creates the
+   Databricks Premium workspace, ADLS Gen2 account/container, the Access
+   Connector managed identity, and the Unity Catalog catalog/schemas. Either:
+   - `cd terraform && terraform init && terraform apply`, **or**
+2. **Bootstrap Unity Catalog interactively** by running
+   `notebooks/setup/00_unity_catalog_setup.py` once per environment. It creates
+   the `labs` catalog, the `bronze`/`silver`/`gold` schemas, the external
+   location over ADLS Gen2, and the job grants that every later lab assumes
+   already exist.
+
+> ⚠️ The labs read/write three-level Unity Catalog names (`labs.bronze.*`,
+> `labs.silver.*`, `labs.gold.*`). You **must** complete the Terraform apply or
+> the setup notebook before Lab 0, or the pipelines will fail with
+> "catalog/schema not found".
+
 👉 **[See Azure Setup Guide →](../setup-azure.md)** (coming soon)
 
 ---

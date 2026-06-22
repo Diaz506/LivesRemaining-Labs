@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill in your values. Do NOT commit terraform.tfvars.
+subscription_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+databricks_account_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+metastore_id          = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+resource_group_name    = "lrl-rg"
+location               = "eastus"
+workspace_name         = "lrl-workspace"
+storage_account_name   = "lrlstorage"
+storage_container_name = "datalake"
+
+catalog_name = "labs"
+
+# Optional: service principal app id or group granted access to the labs catalog.
+job_principal = ""
+
+tags = {
+  project = "lives-remaining-labs"
+  env     = "dev"
+}
