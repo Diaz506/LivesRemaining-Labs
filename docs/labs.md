@@ -276,11 +276,12 @@ Create **Gold feature tables** for ML training.
 
 ### 📋 Deliverables
 
-- `src/jobs/featurize.py` — feature engineering job
-- `notebooks/jobs/01_featurize.py` — interactive walkthrough
+- `src/dlt/gold_pipeline.py` — Gold feature engineering DLT pipeline
+- `notebooks/dlt/03_feature_engineering_gold.py` — interactive walkthrough
 - Gold tables:
   - `churn_features_daily` — features for churn model
   - `arpu_features_daily` — features for revenue model
+  - `player_segments` — BI-ready player segments
 - Scheduled daily job (runs at 1 AM UTC)
 
 ### ☁️ Azure Tasks
@@ -359,8 +360,8 @@ Train churn classification model, evaluate, and register in MLflow.
 
 ### 📋 Deliverables
 
-- `src/jobs/train.py` — training script
-- `notebooks/jobs/02_train_model.py` — interactive notebook
+- `src/jobs/train_churn_model.py` — training script
+- `notebooks/jobs/04_train_churn_model.py` — interactive notebook
 - Trained model registered in MLflow registry (accuracy ~0.85+)
 - Experiment runs logged (try 3–5 hyperparameter configs)
 
@@ -439,8 +440,9 @@ Create daily batch scoring job that scores all players & writes to Delta.
 
 ### 📋 Deliverables
 
-- `src/jobs/score.py` — scoring script
-- `player_churn_scores` table (player_id, churn_probability, risk_tier)
+- `src/jobs/batch_score_churn.py` — scoring script
+- `notebooks/jobs/05_batch_scoring.py` — interactive scoring walkthrough
+- `player_churn_scores` table (`player_id`, `churn_probability`, `risk_tier`)
 - Scheduled Databricks Job (runs 2 AM UTC daily)
 
 ### ☁️ Azure Tasks
@@ -509,7 +511,8 @@ Build Power BI dashboard connected to Databricks Gold tables.
 
 ### 📋 Deliverables
 
-- `powerbi/LivesRemaining.pbix` workbook with 4 pages:
+- `notebooks/powerbi/06_powerbi_dashboard_setup.py` — creates BI-friendly SQL views
+- `powerbi/LivesRemaining.pbix` workbook design with 4 pages:
   - Retention & Churn
   - Revenue & ARPU
   - Matchmaking Quality
@@ -588,7 +591,8 @@ Deploy MLflow model as REST endpoint for real-time scoring.
 ### 📋 Deliverables
 
 - Model endpoint deployed via Databricks Model Serving
-- Python client script to call endpoint
+- `src/jobs/create_serving_endpoint.py` — endpoint deployment helper
+- `notebooks/jobs/07_realtime_scoring_endpoint.py` — endpoint walkthrough and test client
 - Latency benchmarks (P50, P95, P99)
 - Documentation for integration
 

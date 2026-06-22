@@ -11,6 +11,16 @@ Lives Remaining Labs dashboards connect to Gold tables for real-time retention a
 1. **Data Source**: Databricks SQL (DirectQuery or Import)
 2. **Connection String**: `<workspace-url>/sql/protocolv1/o/<org-id>/<cluster-id>`
 3. **Credentials**: Service principal or user PAT
+4. **Setup Notebook**: Run `notebooks/powerbi/06_powerbi_dashboard_setup.py` before connecting.
+
+## Recommended Tables and Views
+
+| Object | Purpose |
+|--------|---------|
+| `labs.gold.vw_retention_churn` | Churn risk KPIs by date, region, platform, and risk tier |
+| `labs.gold.vw_player_segments` | Engagement and revenue cohort summaries |
+| `labs.gold.vw_arpu_summary` | Premium tier and monetization metrics |
+| `labs.gold.player_churn_scores` | Player-level drillthrough and retention action list |
 
 ## Dashboard Pages
 
@@ -37,6 +47,16 @@ Lives Remaining Labs dashboards connect to Gold tables for real-time retention a
 - Daily active players (DAU)
 - Session count distribution
 - Platform/region breakdown
+
+## Suggested DAX Measures
+
+```DAX
+Players = SUM(vw_retention_churn[players])
+Avg Churn Probability = AVERAGE(vw_retention_churn[avg_churn_probability])
+High Risk Players = CALCULATE([Players], vw_retention_churn[risk_tier] = "high")
+High Risk Share = DIVIDE([High Risk Players], [Players])
+ARPU 30D = AVERAGE(vw_arpu_summary[avg_spend_30d])
+```
 
 ## Refresh Policy
 

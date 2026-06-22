@@ -211,7 +211,7 @@ def generate_events(num_events=100000, num_players=10000, days_back=30):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate synthetic PixelForge events.")
+    parser = argparse.ArgumentParser(description="Generate synthetic Lives Remaining Labs events.")
     parser.add_argument("--output", default="data/raw_events.csv", help="Output CSV file")
     parser.add_argument("--count", type=int, default=100000, help="Number of events to generate")
     parser.add_argument("--players", type=int, default=10000, help="Number of unique players")

@@ -67,6 +67,7 @@
 - `churn_features_daily` — Churn model features (player_id, days_since_login, session_count_7d, avg_session_duration, avg_spend_30d, churn_label)
 - `arpu_features_daily` — Revenue model features
 - `player_segments` — Cohort/tier assignments (whale, regular, casual, lapsed)
+- `player_churn_scores` — Batch prediction output for Power BI and retention workflows
 
 ## MLflow Integration
 
@@ -74,6 +75,18 @@
 - **Model Registry**: Register best churn model with staging/prod aliases
 - **Batch scoring**: Daily job loads model, scores all players, writes `player_churn_scores` table
 - **Real-time serving** (optional): REST endpoint for live player risk scoring
+
+## Lab Implementation Map
+
+| Lab | Primary artifact | Output |
+|-----|------------------|--------|
+| 1 | `src/dlt/bronze_pipeline.py` | Bronze raw events |
+| 2 | `src/dlt/silver_pipeline.py` | Cleaned events, sessions, purchases |
+| 3 | `src/dlt/gold_pipeline.py` | Churn, ARPU, and segment features |
+| 4 | `src/jobs/train_churn_model.py` | Registered MLflow churn model |
+| 5 | `src/jobs/batch_score_churn.py` | `player_churn_scores` |
+| 6 | `notebooks/powerbi/06_powerbi_dashboard_setup.py` | SQL views for Power BI |
+| 7 | `src/jobs/create_serving_endpoint.py` | Optional model serving endpoint |
 
 ## Security & Governance (Azure)
 

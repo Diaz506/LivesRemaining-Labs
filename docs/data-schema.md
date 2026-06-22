@@ -132,6 +132,42 @@ One row per player per day. Revenue prediction features.
 
 ---
 
+### `player_segments`
+
+BI-ready engagement and monetization cohorts.
+
+| Column | Type | Note |
+|--------|------|------|
+| player_id | string | Player identifier |
+| compute_date | date | Date segments were computed |
+| region_primary | string | Most common region |
+| platform_primary | string | Most common platform |
+| engagement_segment | string | `core`, `regular`, `casual`, or `lapsed` |
+| revenue_segment | string | `whale`, `spender`, or `free` |
+| days_since_login | integer | Recency signal |
+| total_spend_30d | double | Recent monetization signal |
+
+---
+
+### `player_churn_scores`
+
+Batch prediction output from Lab 5.
+
+| Column | Type | Note |
+|--------|------|------|
+| player_id | string | Player identifier |
+| compute_date | date | Feature snapshot date |
+| scored_at | timestamp | Batch scoring timestamp |
+| churn_probability | double | Probability of churn from MLflow model |
+| risk_tier | string | `low`, `medium`, or `high` |
+| days_since_login | integer | Explanation feature for support/ops |
+| login_count_7d | integer | Explanation feature for support/ops |
+| total_spend_30d | double | Revenue context |
+| platform_primary | string | Player platform |
+| region_primary | string | Player region |
+
+---
+
 ## Sample Events (JSON Payloads by Type)
 
 ### `login`

@@ -27,8 +27,9 @@ LivesRemaining-Labs/
 │   ├── dlt/               # DLT pipeline code (Bronze → Silver → Gold)
 │   └── jobs/              # Training & inference job scripts
 ├── notebooks/             # Runnable lab examples
-│   ├── dlt/              # DLT labs
-│   └── jobs/             # MLflow & training labs
+│   ├── dlt/               # DLT Bronze/Silver/Gold labs
+│   ├── jobs/              # MLflow, scoring, serving labs
+│   └── powerbi/           # Power BI/Fabric setup notebook
 ├── docs/                  # Architecture, lab guides, runbooks
 ├── data/                  # Sample datasets & synthetic event generators
 └── powerbi/              # Dashboard & Fabric integration notes
@@ -78,11 +79,11 @@ LivesRemaining-Labs/
 
 ## Next Steps
 
-- [ ] Review `docs/labs.md` for lab sequence
-- [ ] Review data schemas in `docs/data-schema.md`
-- [ ] Generate synthetic events in `data/`
-- [ ] Configure Terraform variables for your Databricks workspace
-- [ ] Deploy and run Lab 1 (Bronze ingestion)
+- [ ] Run Lab 0 locally to generate or refresh sample events
+- [ ] Upload sample events to ADLS Gen2
+- [ ] Run the DLT notebooks/pipelines in order: Bronze → Silver → Gold
+- [ ] Train and register the churn model with MLflow
+- [ ] Publish batch scores and connect Power BI to the Gold views
 
 ## License
 
