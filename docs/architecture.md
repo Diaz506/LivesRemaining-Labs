@@ -1,35 +1,58 @@
 # Lives Remaining Labs — Architecture Overview
 
-**FICTIONAL COMPANY DISCLAIMER:** This architecture is designed around a fictional multiplayer game studio for educational purposes.
+**FICTIONAL COMPANY DISCLAIMER:** This architecture is designed around a fictional game studio for educational purposes on **Azure Databricks**.
 
 ## Goals
 
-- **Ingest** millions of player events in real-time (DLT Autoloader)
+- **Ingest** millions of player events via Azure Event Hubs or Blob Storage into DLT
 - **Transform** raw events into curated Silver and Gold tables (Bronze → Silver → Gold)
 - **Feature** engineering for ML: churn risk, ARPU prediction, skill tiers, matchmaking scores
 - **Model** lifecycle via MLflow: experiment tracking, registry, batch/real-time serving
 - **Govern** tables via Unity Catalog (access control, lineage, discovery)
-- **Visualize** KPIs and cohort analysis in Power BI / Fabric
+- **Visualize** KPIs and cohort analysis in Power BI / Fabric (connected to Azure Databricks SQL)
 
-## High-Level Data Flow
+## High-Level Data Flow (Azure)
 
 ```
-1. Player Events (Kafka/Kinesis/Cloud Storage)
+1. Player Events (Azure Blob Storage or Event Hubs)
    ↓
-2. DLT Autoloader (Raw → Bronze ingestion)
+2. Azure Databricks Workspace
+   ├─ DLT Autoloader (reads from ADLS Gen2)
+   └─ Service Principal: Storage Blob Data Reader on storage account
    ↓
 3. DLT Silver Transformations (normalization, aggregation, quality checks)
    ↓
 4. Feature Jobs (session metrics, player profiles, engagement windows)
+   ├─ Cluster: Standard with optional GPU (for model training)
+   └─ Job identity: Service principal
    ↓
 5. Gold Feature Tables (churn_features, ARPU_features, skill_tiers)
+   ├─ Stored in Unity Catalog (premium workspace required)
+   └─ Partitioned by compute_date
    ↓
 6. MLflow Training Job (train churn model, register in Model Registry)
+   ├─ MLflow Tracking: Azure Databricks workspace
+   └─ Model artifacts: workspace storage
    ↓
 7. Batch Scoring Job (score all active players daily)
+   ├─ Scheduled via Azure Databricks Jobs
+   └─ Runs 2 AM UTC daily
    ↓
-8. Power BI Dashboards (retention, cohorts, server health)
+8. Power BI / Fabric Dashboards (retention, cohorts, server health)
+   ├─ Data source: Databricks SQL Warehouse (serverless or provisioned)
+   └─ Scheduled refresh: 3 AM UTC
 ```
+
+## Azure Services Used
+
+| Service | Purpose | Lab |
+|---------|---------|-----|
+| **Azure Databricks** | Analytics & ML platform | All |
+| **Azure Data Lake Storage (ADLS Gen2)** | Data lake for Bronze/Silver/Gold | Labs 0–1 |
+| **Azure Event Hubs** (optional) | Real-time event streaming ingestion | Lab 1 (optional) |
+| **Azure Key Vault** | Secrets management (storage keys, PATs) | Setup |
+| **Azure Entra (AAD)** | Service principal authentication | Setup |
+| **Power BI Premium / Microsoft Fabric** | Dashboarding & interactive analytics | Lab 6 |
 
 ## Key Tables
 
@@ -52,15 +75,19 @@
 - **Batch scoring**: Daily job loads model, scores all players, writes `player_churn_scores` table
 - **Real-time serving** (optional): REST endpoint for live player risk scoring
 
-## Security & Governance
+## Security & Governance (Azure)
 
-- **Unity Catalog**: Namespace tables by environment (dev, staging, prod)
-- **Service principals**: Automation identities for jobs
-- **Audit logs**: Delta transaction logs + UC lineage for compliance
-- **Row-level filters** (optional): Restrict data by region/game-mode
+- **Unity Catalog**: Namespace tables by environment (dev/staging/prod) in Azure Databricks
+- **Service Principals**: Azure Entra (AAD) service principals for job automation
+- **Azure RBAC**: Storage account roles (Storage Blob Data Reader, Contributor)
+- **Azure Key Vault**: Store secrets (storage connection strings, Databricks PATs)
+- **Audit logs**: Delta transaction logs + UC lineage for compliance and audit trails
+- **Network Security**: Optional VNet integration for private connectivity
 
-## Scaling Notes
+## Scaling Notes (Azure)
 
-- **Streaming architecture**: Kafka/Event Hub → Autoloader handles backpressure
+- **Streaming architecture**: Azure Event Hubs → DLT Autoloader handles backpressure & dead-letter queues
+- **Databricks compute**: Auto-scaling clusters (min 2–4 workers, max 32+)
 - **Partitioning**: Bronze by `ingest_date`, Silver by `player_id`, Gold by `compute_date`
 - **Clustering**: Gold tables clustered on `player_id` for fast joins
+- **Cost optimization**: Use Spot instances for non-critical jobs, serverless SQL warehouses for analytics

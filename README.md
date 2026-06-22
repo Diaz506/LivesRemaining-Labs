@@ -1,19 +1,20 @@
-# Lives Remaining Labs — Databricks E2E Data Lab
+# Lives Remaining Labs — Azure Databricks E2E Data Lab
 
 **⚠️ FICTIONAL COMPANY: Lives Remaining Labs is a fictional game studio created for this reference implementation.**
 
 ---
 
-**Multiplayer game studio analysis: player events, churn prediction, matchmaking quality & retention optimization.**
+**Multiplayer game studio analysis on Azure Databricks: player events, churn prediction, matchmaking quality & retention optimization.**
 
 ## Overview
 
-Lives Remaining Labs is a reference end-to-end Databricks project demonstrating:
-- **Real-time event ingestion** via Delta Live Tables (DLT)
+Lives Remaining Labs is a reference end-to-end **Azure Databricks** project demonstrating:
+- **Real-time event ingestion** via Delta Live Tables (DLT) from Azure Event Hubs / Blob Storage
 - **Feature engineering** for churn and ARPU modeling
 - **ML lifecycle** with MLflow (experiment tracking, model registry, serving)
 - **Governance** via Unity Catalog
-- **Analytics** dashboards in Power BI / Fabric
+- **Analytics** dashboards in Power BI / Fabric on Azure
+- **Infrastructure** provisioned via Terraform (Azure provider)
 
 **KPIs:** Churn rate, ARPU, retention lift, matchmaking quality score, player session length.
 
@@ -32,6 +33,17 @@ LivesRemaining-Labs/
 ├── data/                  # Sample datasets & synthetic event generators
 └── powerbi/              # Dashboard & Fabric integration notes
 ```
+
+## Prerequisites
+
+- **Azure subscription** with resource group
+- **Azure Databricks workspace** (Premium tier recommended for Unity Catalog)
+- **Azure Storage Account** (ADLS Gen2) for data lake
+- **Terraform** >= 1.0 with Azure provider
+- **Python** 3.9+ (for local script testing)
+- **PowerShell** or **Azure CLI** for resource provisioning
+
+👉 **[See setup guide →](docs/setup-azure.md)** (coming soon)
 
 ## Quick Start
 
@@ -59,7 +71,8 @@ LivesRemaining-Labs/
 
 ## Documentation
 
-- **[Architecture Overview](docs/architecture.md)** — System design, data flow, security
+- **[Azure Databricks Setup Guide](docs/setup-azure.md)** — Prerequisites & workspace provisioning
+- **[Architecture Overview](docs/architecture.md)** — System design, Azure services, data flow
 - **[Data Schema](docs/data-schema.md)** — Bronze/Silver/Gold table schemas
 - **[Lab Sequence](docs/labs.md)** — Step-by-step instructions for all 7 labs
 
