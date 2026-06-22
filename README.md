@@ -1,10 +1,14 @@
-# PixelForge Games — Databricks E2E Data Lab
+# Lives Remaining Labs — Databricks E2E Data Lab
+
+**⚠️ FICTIONAL COMPANY: Lives Remaining Labs is a fictional game studio created for this reference implementation.**
+
+---
 
 **Multiplayer game studio analysis: player events, churn prediction, matchmaking quality & retention optimization.**
 
 ## Overview
 
-PixelForge Games is a reference end-to-end Databricks project demonstrating:
+Lives Remaining Labs is a reference end-to-end Databricks project demonstrating:
 - **Real-time event ingestion** via Delta Live Tables (DLT)
 - **Feature engineering** for churn and ARPU modeling
 - **ML lifecycle** with MLflow (experiment tracking, model registry, serving)
@@ -16,7 +20,7 @@ PixelForge Games is a reference end-to-end Databricks project demonstrating:
 ## Repo Structure
 
 ```
-PixelForge-DataLab/
+LivesRemaining-Labs/
 ├── terraform/              # Databricks workspace, Unity Catalog, jobs
 ├── src/
 │   ├── dlt/               # DLT pipeline code (Bronze → Silver → Gold)

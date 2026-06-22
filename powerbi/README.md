@@ -1,8 +1,10 @@
 # Power BI / Fabric Dashboards
 
+**FICTIONAL COMPANY:** Lives Remaining Labs is a fictional game studio for this Databricks reference implementation.
+
 ## Overview
 
-PixelForge dashboards connect to Gold tables for real-time retention analytics, cohort drills, and server health monitoring.
+Lives Remaining Labs dashboards connect to Gold tables for real-time retention analytics, cohort drills, and server health monitoring.
 
 ## Connection Setup
 
@@ -43,6 +45,6 @@ PixelForge dashboards connect to Gold tables for real-time retention analytics, 
 
 ## Files
 
-- `PixelForge.pbix` — Main dashboard workbook
+- `LivesRemaining.pbix` — Main dashboard workbook
 
 See individual page documents for drill-down specs.

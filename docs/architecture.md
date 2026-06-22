@@ -1,4 +1,6 @@
-# PixelForge Games — Architecture Overview
+# Lives Remaining Labs — Architecture Overview
+
+**FICTIONAL COMPANY DISCLAIMER:** This architecture is designed around a fictional multiplayer game studio for educational purposes.
 
 ## Goals
 
@@ -32,7 +34,7 @@
 ## Key Tables
 
 ### Bronze
-- `pixelforge_raw_events` — Raw event dumps (event_id, player_id, event_type, timestamp, payload JSON)
+- `lives_remaining_raw_events` — Raw event dumps (event_id, player_id, event_type, timestamp, payload JSON)
 
 ### Silver
 - `player_sessions` — Session-level aggregates (session_id, player_id, start_ts, duration_min, kills, losses, spent_usd)

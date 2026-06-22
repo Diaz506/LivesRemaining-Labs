@@ -1,4 +1,6 @@
-# PixelForge Data Schema
+# Lives Remaining Labs — Data Schema
+
+**FICTIONAL COMPANY:** Lives Remaining Labs is a fictional game studio for this Databricks reference implementation.
 
 ## Event Types
 
@@ -18,7 +20,7 @@ ingest_ts: datetime (server-side ingestion time)
 
 ---
 
-## Bronze Table: `pixelforge_raw_events`
+## Bronze Table: `lives_remaining_raw_events`
 
 Raw events exactly as received. Partitioned by `ingest_date`.
 

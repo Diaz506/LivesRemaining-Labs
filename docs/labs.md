@@ -1,4 +1,6 @@
-# PixelForge Labs — Sequence & Instructions
+# Lives Remaining Labs — Lab Sequence & Instructions
+
+**FICTIONAL COMPANY:** Lives Remaining Labs is a fictional multiplayer game studio created for educational purposes.
 
 ## Lab 0: Setup & Sample Data Generation
 
