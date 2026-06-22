@@ -1,0 +1,109 @@
+"""
+DLT Pipeline: Bronze Ingestion via Autoloader
+Lives Remaining Labs - Lab 1
+
+This pipeline uses Delta Live Tables Autoloader to ingest raw player events from
+Azure Blob Storage (ADLS Gen2) into a Bronze Delta table.
+
+Autoloader automatically:
+- Detects new files in the source directory
+- Infers and evolves schema
+- Checkpoints processed files to prevent reprocessing
+- Handles late arrivals and duplicates
+
+Service Principal Authentication:
+- Databricks uses service principal credentials to authenticate with ADLS Gen2
+- Credentials must be configured in cluster init script or workspace secrets
+"""
+
+import dlt
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, LongType, DoubleType
+
+
+# Define Bronze schema (matches raw_events.csv structure)
+bronze_schema = StructType([
+    StructField("event_id", StringType(), False),
+    StructField("player_id", StringType(), False),
+    StructField("event_type", StringType(), False),
+    StructField("timestamp", StringType(), False),
+    StructField("game_mode", StringType(), True),
+    StructField("region", StringType(), True),
+    StructField("platform", StringType(), True),
+    StructField("payload", StringType(), True),
+    StructField("ingest_ts", StringType(), True),
+    StructField("ingest_date", StringType(), True),
+])
+
+
+@dlt.table(
+    name="lives_remaining_raw_events",
+    comment="Bronze: Raw player events ingested from ADLS Gen2 via Autoloader",
+    table_properties={
+        "quality": "bronze",
+        "source": "azure_blob_storage",
+        "pipeline": "bronze_ingestion"
+    }
+)
+@dlt.expect_or_drop("valid_event_id", "event_id IS NOT NULL")
+@dlt.expect_or_drop("valid_player_id", "player_id IS NOT NULL")
+@dlt.expect_or_drop("valid_event_type", "event_type IN ('login', 'logout', 'kill', 'death', 'purchase', 'session_end')")
+def bronze_events():
+    """
+    Autoloader pipeline: Read raw events from cloud storage.
+    
+    Configuration:
+    - Source: abfss://datalake@lrlstorage.dfs.core.windows.net/events/
+    - Format: CSV with headers
+    - Checkpoint: abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/
+    - Mode: Incrementally read new files only
+    
+    Expectations (Quality Checks):
+    - event_id: Not null (every event must have unique ID)
+    - player_id: Not null (every event must be tied to player)
+    - event_type: Must be one of 6 valid types (catch schema errors)
+    
+    Drop rows that fail expectations (DLT default behavior with @dlt.expect_or_drop).
+    """
+    
+    # Mount point: /mnt/data should be created with ADLS Gen2 credentials
+    # See docs/setup-azure.md for mounting instructions
+    source_path = "/mnt/data/events/"
+    checkpoint_path = "/mnt/data/.checkpoints/events/"
+    
+    return (
+        spark.readStream.format("cloudFiles")
+        .option("cloudFiles.format", "csv")
+        .option("cloudFiles.schemaLocation", checkpoint_path)
+        .option("header", "true")
+        .option("inferSchema", "false")  # Use explicit schema for reliability
+        .schema(bronze_schema)
+        .load(source_path)
+    )
+
+
+@dlt.table(
+    name="events_quality_metrics",
+    comment="Quality metrics for bronze ingestion",
+)
+def quality_metrics():
+    """
+    Summary of quality checks (expectations passed/failed).
+    Useful for monitoring data quality over time.
+    """
+    return dlt.read("lives_remaining_raw_events")
+
+
+@dlt.view
+def raw_events_summary():
+    """
+    Quick summary: row count, unique players, event type distribution.
+    Useful for sanity checks during ingestion.
+    """
+    df = dlt.read("lives_remaining_raw_events")
+    return (
+        df.selectExpr(
+            "COUNT(*) as total_events",
+            "COUNT(DISTINCT player_id) as unique_players",
+            "COUNT(DISTINCT DATE(timestamp)) as days_covered"
+        )
+    )
