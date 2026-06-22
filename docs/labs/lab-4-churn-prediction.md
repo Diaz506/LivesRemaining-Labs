@@ -1,82 +1,88 @@
 # Lab 4: Churn Prediction with MLflow
 
-### 🎯 Why This Lab?
+**Goal:** Train a churn classifier on `labs.gold.churn_features_daily`, track it in MLflow, and register `lives_remaining_churn_model`.
 
-Now we have features! **MLflow** is Databricks' ML lifecycle framework:
-- Track experiments (hyperparameters, metrics, artifacts)
-- Register models in model registry
-- Version & promote models (dev → staging → prod)
-- Reproducibility: Re-run exact experiments
-
-Why MLflow instead of just sklearn?
-- Experiment tracking across team
-- Model reproducibility & lineage
-- Easy model deployment
-- Metric comparison across runs
-
-### 📚 Concepts
-
-**ML Workflow:**
-1. Load training data (Gold features + labels)
-2. Split: train (70%), test (30%)
-3. Train model with hyperparameters
-4. Evaluate on test set (accuracy, precision, recall, AUC)
-5. Log to MLflow Tracking
-6. Register best model in MLflow Model Registry
-
-**Classification Metrics:**
-- **Accuracy**: (TP + TN) / total (good overall metric)
-- **Precision**: TP / (TP + FP) (when you predict churn, are you right?)
-- **Recall**: TP / (TP + FN) (of actual churners, how many did you catch?)
-- **F1-score**: Harmonic mean of precision & recall
-- **AUC**: Area under ROC curve (0.5 = random, 1.0 = perfect)
-
-**Hyperparameters (for sklearn RandomForest):**
-- `max_depth`: How deep trees can grow (prevent overfitting)
-- `n_estimators`: Number of trees
-- `min_samples_split`: Min samples to split node
-- Tuning: Grid search or random search
-
-**Model Registry:**
-- Central place to store trained models
-- Stages: None → Staging → Production → Archived
-- Enables promotion workflow
-
-### 🔧 Goal
-
-Train churn classification model, evaluate, and register in MLflow.
-
-### 📋 Deliverables
-
-- `src/jobs/train_churn_model.py` — training script
-- `notebooks/jobs/04_train_churn_model.py` — interactive notebook
-- Trained model registered in MLflow registry (accuracy ~0.85+)
-- Experiment runs logged (try 3–5 hyperparameter configs)
-
-### ☁️ Azure Tasks
-
-- View MLflow Tracking UI in Databricks workspace
-- Register model in MLflow Model Registry
-- Compare metrics across runs
-
-### 🔑 Key Terms
-
-- **Experiment**: Collection of runs (different hyperparameter configs)
-- **Run**: Single training job (logs metrics, params, artifacts)
-- **MLflow Tracking Server**: Records experiments (default: workspace)
-- **Model Registry**: Central repository for production models
-- **Hyperparameter**: Tunable config (not learned from data)
-- **Train/test split**: Data separation (prevent overfitting on test set)
-
-### ⏱️ Time: ~2 hours
-
-### 📖 Reference
-
-- MLflow: [Documentation](https://mlflow.org/docs/latest/index.html)
-- Databricks MLflow: [Workspace integration](https://docs.databricks.com/en/machine-learning/mlflow/index.html)
-- Classification metrics: [Scikit-learn docs](https://scikit-learn.org/stable/modules/model_evaluation.html)
-- Hyperparameter tuning: [Grid search](https://scikit-learn.org/stable/modules/grid_search.html)
-
-### Prerequisites: Lab 3
+⏱️ **Time:** ~2 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 3](lab-3-feature-engineering.md)
 
 ---
+
+### 🎯 Why this lab
+
+MLflow gives you experiment tracking, metric comparison, model versioning, and a registry for promotion (dev → staging → prod). We train a Spark ML `RandomForestClassifier` pipeline and log everything to MLflow.
+
+**Artifacts:** `notebooks/jobs/04_train_churn_model.py` (interactive) and `src/jobs/train_churn_model.py` (parameterized job).
+
+---
+
+## 🪜 Steps
+
+### Step 1 — Open the training notebook
+
+Open `notebooks/jobs/04_train_churn_model.py` on a cluster with **Databricks Runtime ML**. Confirm the constants in Part 1:
+
+```python
+feature_table   = "labs.gold.churn_features_daily"
+model_name      = "lives_remaining_churn_model"
+experiment_name = "/Shared/lives-remaining/churn"
+```
+
+### Step 2 — Inspect the features and label balance
+
+Run Part 1's cells. The label summary should show both classes:
+
+```sql
+SELECT churn_label, COUNT(*) FROM labs.gold.churn_features_daily GROUP BY churn_label;
+```
+
+If only one class appears, fix Lab 3 before continuing (the model can't learn from one class).
+
+### Step 3 — Train and log the model
+
+Run Part 2. This builds the pipeline (`StringIndexer` × 2 → `VectorAssembler` → `RandomForestClassifier`, `maxDepth=8, numTrees=80`), does a 70/30 split, and inside an `mlflow.start_run`:
+- logs params (`num_trees`, `max_depth`, `feature_table`)
+- logs metrics (`auc`, `accuracy`, `f1`)
+- registers the model as `lives_remaining_churn_model`
+
+**Expected:**
+
+```
+Registered lives_remaining_churn_model: AUC=0.9x, accuracy=0.8x, f1=0.8x
+```
+
+### Step 4 — Review runs in the MLflow UI
+
+Open **Experiments → `/Shared/lives-remaining/churn`**. Confirm your run with its metrics and the logged `model` artifact.
+
+### Step 5 — Try a few configurations (experiment tracking in action)
+
+Re-run Part 2 changing `maxDepth`/`numTrees` (e.g. 5/50, 10/120), or run the script with different args:
+
+```bash
+python src/jobs/train_churn_model.py --algorithm random_forest --num-trees 120 --max-depth 10
+python src/jobs/train_churn_model.py --algorithm logistic_regression
+```
+
+Compare AUC/F1 across runs in the Experiments UI and pick the best.
+
+### Step 6 — Promote the best version to Production
+
+In **Models → `lives_remaining_churn_model`**, open the best version and set its stage/alias to **Production** (Lab 5 loads `models:/lives_remaining_churn_model/Production`).
+
+---
+
+## ✅ Done when
+
+- [ ] At least one run logged to `/Shared/lives-remaining/churn` with AUC/accuracy/F1
+- [ ] `lives_remaining_churn_model` registered with ≥ 1 version
+- [ ] Best version promoted to **Production**
+
+## 🧯 Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `Only one class present` / training fails | Fix label balance in Lab 3. |
+| `Table not found: labs.gold...` | Run Lab 3. |
+| `mlflow.spark` import error | Attach a **Databricks Runtime ML** cluster. |
+| Accuracy ~1.0 / AUC = 1.0 | Synthetic data can be separable; treat metrics as illustrative, not production-grade. |
+
+**Next:** [Lab 5 — Batch scoring →](lab-5-batch-scoring.md)

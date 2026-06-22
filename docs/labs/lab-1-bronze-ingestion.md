@@ -1,93 +1,105 @@
-# Lab 1: Bronze Ingestion via DLT Autoloader (Azure)
+# Lab 1: Bronze Ingestion via DLT Autoloader
 
-### 🎯 Why This Lab?
+**Goal:** Ingest the raw CSV events from ADLS Gen2 into the Bronze Delta table `labs.bronze.lives_remaining_raw_events` using a Delta Live Tables (DLT) Autoloader pipeline.
 
-Raw data in cloud storage is hard to query. **Delta Live Tables (DLT)** is Databricks' declarative ETL framework that:
-- Ingests data reliably into Delta Lake tables
-- Handles late arrivals and schema changes (via **Autoloader**)
-- Creates lineage & audit trails automatically
-- Enables incremental processing (only new files processed)
-
-### 📚 Concepts
-
-**Delta Lake:**
-- ACID-compliant data lake format (combines data warehouse + data lake)
-- Tables stored as Parquet files + transaction log
-- Supports time travel, rollback, schema enforcement
-- Why use it? Reliability + performance + governance
-
-**DLT (Delta Live Tables):**
-- Declarative framework (you declare *what*, not *how*)
-- Automatically handles:
-  - Schema inference & evolution
-  - Data quality checks (expectations)
-  - Idempotent ingestion (safe to re-run)
-- Why use it instead of plain PySpark?
-  - No need to manage checkpoints manually
-  - Lineage tracked automatically
-  - Recovery from failures is built-in
-  - Code is simpler and more maintainable
-
-**Autoloader:**
-- Watches a cloud storage path for new files
-- Automatically ingests without manual triggering
-- Uses checkpoints to track processed files
-- Handles large files, late arrivals, and duplicates
-
-**Service Principal Authentication (Azure):**
-- Service principal = app identity (not a human user)
-- Databricks uses it to authenticate with ADLS Gen2
-- Credentials securely stored in Azure Key Vault
-- Jobs can run unattended using service principal
-
-### 🔧 Goal
-
-Ingest raw player events from Azure Blob Storage into a **Bronze Delta table** using DLT Autoloader.
-
-### 📋 Deliverables
-
-- `src/dlt/bronze_pipeline.py` — DLT pipeline code
-- `notebooks/dlt/01_ingest_bronze.py` — runnable notebook
-- Bronze table `lives_remaining_raw_events` in Unity Catalog
-- Autoloader checkpoint stored in ADLS Gen2 (tracks processed files)
-
-### ☁️ Azure Tasks
-
-1. Mount ADLS Gen2 in Databricks cluster using service principal:
-   ```python
-   dbutils.fs.mount(
-     source="abfss://datalake@lrlstorage.dfs.core.windows.net/",
-     mount_point="/mnt/data",
-     extra_configs={
-       "fs.azure.account.auth.type": "OAuth",
-       "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-       "fs.azure.account.oauth2.client.id": "<service-principal-id>",
-       "fs.azure.account.oauth2.client.secret": "<secret>",
-       "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token"
-     }
-   )
-   ```
-
-2. Create external location in Unity Catalog (links to ADLS)
-
-3. Set up DLT pipeline in Databricks workspace UI
-
-### 🔑 Key Terms
-
-- **Checkpoint**: File tracking which data has been ingested (prevents reprocessing)
-- **Schema inference**: DLT auto-detects column names & types from CSV headers
-- **Idempotent**: Safe to run multiple times with same result
-- **External location**: UC object pointing to cloud storage
-- **Service Principal**: Non-interactive identity for automation
-
-### ⏱️ Time: ~1 hour
-
-### 📖 Reference
-
-- Schema: `../data-schema.md`
-- DLT docs: [Databricks DLT](https://docs.databricks.com/en/delta-live-tables/)
-- Autoloader: [Cloud file ingestion](https://docs.databricks.com/en/ingestion/auto-loader/)
-
-### Prerequisites: Lab 0
+⏱️ **Time:** ~1 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 0](lab-0-setup-data-generation.md)
 
 ---
+
+### 🎯 Why this lab
+
+The Bronze layer stores raw events *as-is* for audit and replay. DLT + Autoloader gives us incremental ingestion (only new files), schema enforcement, quality expectations, and automatic lineage — without managing checkpoints by hand.
+
+**Artifacts you'll use:** `src/dlt/bronze_pipeline.py` (pipeline) and `notebooks/dlt/01_ingest_bronze.py` (interactive walkthrough).
+
+---
+
+## 🪜 Steps
+
+### Step 1 — Import the repo into the workspace
+
+In the Databricks workspace: **Workspace → (your folder) → Create → Git folder**, point it at this repo. You should see `src/dlt/bronze_pipeline.py` and `notebooks/dlt/01_ingest_bronze.py`.
+
+### Step 2 — Give the cluster access to ADLS Gen2
+
+The pipeline reads `/mnt/data/events/`. Mount ADLS Gen2 with the service principal **once** (run in a notebook attached to an all-purpose cluster):
+
+```python
+configs = {
+  "fs.azure.account.auth.type": "OAuth",
+  "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+  "fs.azure.account.oauth2.client.id": dbutils.secrets.get("lrl", "sp-client-id"),
+  "fs.azure.account.oauth2.client.secret": dbutils.secrets.get("lrl", "sp-secret"),
+  "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token",
+}
+dbutils.fs.mount(
+  source="abfss://datalake@lrlstorage.dfs.core.windows.net/",
+  mount_point="/mnt/data",
+  extra_configs=configs,
+)
+```
+
+> Prefer Unity Catalog external locations over mounts in production. For this lab the mount keeps `src/dlt/bronze_pipeline.py` simple (it reads `/mnt/data/events/`).
+
+### Step 3 — Verify data is reachable
+
+Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6, Steps 2–6). Expected:
+
+```
+✅ Mount /mnt/data is ready!
+✅ Found 1 files in /mnt/data/events/:
+  - raw_events.csv
+✅ Successfully read CSV! Shape: 100000 rows, 10 columns
+```
+
+### Step 4 — Create the DLT pipeline
+
+**Workflows → Delta Live Tables → Create pipeline**:
+
+| Setting | Value |
+|---------|-------|
+| Pipeline name | `lives-remaining-bronze-ingestion` |
+| Source code | `…/src/dlt/bronze_pipeline.py` |
+| Destination | **Unity Catalog** → Catalog `labs`, Target schema `bronze` |
+| Pipeline mode | **Triggered** |
+| Cluster | Default job cluster (autoscale 1–2) |
+
+### Step 5 — Run the pipeline
+
+Click **Start**. DLT builds the graph and creates:
+- `lives_remaining_raw_events` (Bronze table)
+- `events_quality_metrics`, `raw_events_summary` (monitoring)
+
+Watch the graph go green. The three expectations (`valid_event_id`, `valid_player_id`, `valid_event_type` from `bronze_pipeline.py:47-49`) report pass/drop counts on the table node.
+
+### Step 6 — Verify the Bronze table
+
+In a SQL cell or notebook:
+
+```sql
+SELECT COUNT(*) AS rows, COUNT(DISTINCT player_id) AS players
+FROM labs.bronze.lives_remaining_raw_events;
+
+SELECT event_type, COUNT(*) FROM labs.bronze.lives_remaining_raw_events GROUP BY event_type;
+```
+
+Expect ~100k rows (minus any dropped by expectations) across all 6 event types.
+
+---
+
+## ✅ Done when
+
+- [ ] DLT pipeline `lives-remaining-bronze-ingestion` ran successfully (all nodes green)
+- [ ] `labs.bronze.lives_remaining_raw_events` exists and is queryable
+- [ ] Expectation metrics show valid rows kept, invalid rows dropped
+
+## 🧯 Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `Mount /mnt/data not found` | Re-run Step 2; verify the service principal secret scope. |
+| `No files found in /mnt/data/events/` | Re-run Lab 0 Step 5 (upload). |
+| `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md#provision--bootstrap). |
+| Many rows dropped | Inspect failing expectation in the DLT UI → likely an unexpected `event_type`. |
+
+**Next:** [Lab 2 — Silver transformations →](lab-2-silver-transformations.md)
