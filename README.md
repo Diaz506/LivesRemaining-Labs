@@ -18,6 +18,25 @@ Lives Remaining Labs is a reference end-to-end **Azure Databricks** project demo
 
 **KPIs:** Churn rate, ARPU, retention lift, matchmaking quality score, player session length.
 
+## 🎮 The Story
+
+Day-30 retention just dropped six points after a content patch, and the studio's
+highest-spending players — the *whales* — are quietly slipping away. You've
+joined the **Player Intelligence team** to build a churn early-warning system on
+Azure Databricks, from raw telemetry all the way to live, in-game retention
+offers.
+
+**Your cast:**
+
+| Who | Role |
+|-----|------|
+| **Maya Chen** | Head of Live Ops — sets the mission, wants the dashboards |
+| **Dev Rao** | Senior Data Engineer — your mentor through the pipeline |
+| **You** | Analytics Engineer on the Player Intelligence team |
+
+Each lab opens with a short **Mission Briefing** that frames the technical work
+in the studio's story.
+
 ## Repo Structure
 
 ```

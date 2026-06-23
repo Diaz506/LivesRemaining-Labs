@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~2 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 3](lab-3-feature-engineering.md)
 
+> 🎮 **Mission Briefing**
+>
+> The retention team wants a churn early-warning system before the next content drop. Using the Gold features, you'll train and register a churn model in MLflow — and prove it actually separates the players who stay from the ones who leave.
+
 ---
 
 ### 🎯 Why this lab

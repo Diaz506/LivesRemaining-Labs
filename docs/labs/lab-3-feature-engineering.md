@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~1.5 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 2](lab-2-silver-transformations.md)
 
+> 🎮 **Mission Briefing**
+>
+> "Models don't eat events — they eat features," Maya reminds the team. To predict who's about to quit, you'll roll Silver data into **Gold** feature tables: logins in the last 7 days, spend trends, days-since-login, and the churn label itself.
+
 ---
 
 ### 🎯 Why this lab

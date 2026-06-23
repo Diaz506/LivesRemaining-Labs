@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~30 min &nbsp;|&nbsp; **Prerequisites:** [Setup / Unity Catalog bootstrap](prerequisites.md#provision--bootstrap)
 
+> 🎮 **Mission Briefing**
+>
+> Maya Chen, Head of Live Ops, drops a 9am message: *"Day-30 retention fell six points after the last patch and analytics is flying blind — we have no event data to work with."* Before anyone can find the churning whales, the Player Intelligence team needs a realistic stream of player telemetry to build on. Today, you generate it.
+
 ---
 
 ### 🎯 Why this lab

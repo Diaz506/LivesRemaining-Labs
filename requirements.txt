@@ -1,0 +1,15 @@
+# Local tooling for Lives Remaining Labs.
+# Note: the Databricks notebooks/jobs run on Databricks Runtime (ML), which
+# already provides pyspark and mlflow. These deps are for local script use
+# (data generation, serving-endpoint helper) and authoring.
+
+# Lab 0 — synthetic event generation
+pandas>=2.1.0
+numpy>=1.24.0
+faker>=20.0.0
+
+# Lab 7 — serving endpoint helper (REST client)
+requests>=2.31.0
+
+# Lab 4/5 — model lifecycle (provided on DBR ML; pinned for local use)
+mlflow>=2.9.0

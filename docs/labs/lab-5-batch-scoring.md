@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~1 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 4](lab-4-churn-prediction.md)
 
+> 🎮 **Mission Briefing**
+>
+> *"A model in a registry doesn't save a single player,"* Maya says. Tonight your job is to put it to work: score every active player and publish a daily risk list the retention team can act on each morning.
+
 ---
 
 ### 🎯 Why this lab

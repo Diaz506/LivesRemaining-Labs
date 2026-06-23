@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~2 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 5](lab-5-batch-scoring.md)
 
+> 🎮 **Mission Briefing**
+>
+> Maya needs a single screen she can open before the exec stand-up — churn risk, revenue cohorts, who's slipping away. You'll wire **Power BI** to Databricks SQL and build the dashboards Live Ops checks with their morning coffee.
+
 ---
 
 ### 🎯 Why this lab

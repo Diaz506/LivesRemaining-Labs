@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~1 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 0](lab-0-setup-data-generation.md)
 
+> 🎮 **Mission Briefing**
+>
+> "Raw events are landing in the lake, but they're just CSV files nobody can trust yet," Dev Rao says, pulling up the storage browser. Your job: get them into a **Bronze** Delta table — reliably, incrementally, with quality checks — so the rest of the pipeline has solid ground to stand on.
+
 ---
 
 ### 🎯 Why this lab

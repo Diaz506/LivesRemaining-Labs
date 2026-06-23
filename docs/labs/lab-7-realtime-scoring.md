@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~1.5 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 4](lab-4-churn-prediction.md)
 
+> 🎮 **Mission Briefing**
+>
+> A new idea lands in the design review: show a targeted offer *the moment* a player looks like they're about to rage-quit. Nightly batch scores are too slow for that — you'll deploy the churn model as a **real-time endpoint** for live, in-game decisions.
+
 ---
 
 ### 🎯 Why this lab

@@ -4,6 +4,10 @@
 
 ⏱️ **Time:** ~1.5 hr &nbsp;|&nbsp; **Prerequisites:** [Lab 1](lab-1-bronze-ingestion.md)
 
+> 🎮 **Mission Briefing**
+>
+> Dev frowns at the Bronze table: *"String timestamps, mixed casing, JSON blobs, duplicate events — we can't ship dashboards off this."* In the **Silver** layer you'll turn that noise into clean, typed, deduplicated tables the whole team can rely on.
+
 ---
 
 ### 🎯 Why this lab
