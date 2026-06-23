@@ -99,6 +99,6 @@ See [`terraform/README.md`](../../terraform/README.md) for variables and details
 
 ---
 
-👉 **[Detailed Azure Setup Guide →](../setup-azure.md)** (coming soon)
+👉 **[Detailed Azure Setup Guide →](../setup-azure.md)**
 
 **Next:** [Lab 0 — Sample data generation →](lab-0-setup-data-generation.md)

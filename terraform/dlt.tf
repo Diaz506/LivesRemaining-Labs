@@ -19,9 +19,9 @@ resource "databricks_pipeline" "medallion" {
   provider = databricks.workspace
   for_each = local.dlt_layers
 
-  name    = "lrl-${each.key}"
-  catalog = databricks_catalog.labs.name
-  target  = each.key
+  name       = "lrl-${each.key}"
+  catalog    = databricks_catalog.labs.name
+  target     = each.key
   serverless = true
 
   library {

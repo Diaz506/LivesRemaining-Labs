@@ -90,7 +90,7 @@
 
 ## Security & Governance (Azure)
 
-- **Unity Catalog**: Namespace tables by environment (dev/staging/prod) in Azure Databricks
+- **Unity Catalog**: The labs use a single catalog `labs` with `bronze`/`silver`/`gold` schemas (three-level names `labs.bronze.*`, etc.). For multi-environment isolation, create a catalog **per environment** (`labs_dev` / `labs_staging` / `labs_prod`) — the setup notebook's `catalog` widget and the Terraform `catalog_name` variable make this a one-line change. *(The lab code references `labs` directly for simplicity.)*
 - **Service Principals**: Azure Entra (AAD) service principals for job automation
 - **Azure RBAC**: Storage account roles (Storage Blob Data Reader, Contributor)
 - **Azure Key Vault**: Store secrets (storage connection strings, Databricks PATs)
