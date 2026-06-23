@@ -11,7 +11,7 @@ Start with the prerequisites, then complete the labs in order. Each lab now has 
 | Lab | Duration | Concept | Guide | Primary runnable artifact |
 |-----|----------|---------|-------|---------------------------|
 | Prerequisites | - | Azure and Databricks setup | [Open](labs/prerequisites.md) | Terraform / workspace setup |
-| Setup | 15 min | Unity Catalog bootstrap (catalog, schemas, grants) | [Open](labs/prerequisites.md#provision--bootstrap) | `terraform/` or `notebooks/setup/00_unity_catalog_setup.py` |
+| Setup | 15 min | Workspace + Unity Catalog (UI default, Terraform optional) | [Open](labs/prerequisites.md) | `notebooks/setup/00_unity_catalog_setup.py` (or `terraform/`) |
 | Lab 0 | 30 min | Data generation | [Open](labs/lab-0-setup-data-generation.md) | `scripts/generate_events.py` |
 | Lab 1 | 1 hr | DLT Autoloader Bronze ingestion | [Open](labs/lab-1-bronze-ingestion.md) | `notebooks/dlt/01_ingest_bronze.py` |
 | Lab 2 | 1.5 hr | Silver transformations and quality checks | [Open](labs/lab-2-silver-transformations.md) | `notebooks/dlt/02_silver_transformations.py` |

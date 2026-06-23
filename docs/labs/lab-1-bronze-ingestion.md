@@ -103,7 +103,7 @@ Expect ~100k rows (minus any dropped by expectations) across all 6 event types.
 |---------|-----|
 | `Mount /mnt/data not found` | Re-run Step 2; verify the service principal secret scope. |
 | `No files found in /mnt/data/events/` | Re-run Lab 0 Step 5 (upload). |
-| `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md#provision--bootstrap). |
+| `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md). |
 | Many rows dropped | Inspect failing expectation in the DLT UI → likely an unexpected `event_type`. |
 
 **Next:** [Lab 2 — Silver transformations →](lab-2-silver-transformations.md)

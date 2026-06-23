@@ -1,5 +1,11 @@
 # Terraform — Azure Databricks Infrastructure
 
+> 🧭 **Advanced / optional.** This is **Path B** of setup. If you're new to the
+> labs, use the UI path first — see
+> [`docs/labs/prerequisites.md`](../docs/labs/prerequisites.md) (Path A) and the
+> `notebooks/setup/00_unity_catalog_setup.py` bootstrap notebook. Come back here
+> when you want repeatable, scripted infrastructure for dev/staging/prod.
+
 This folder contains Terraform code to provision Azure resources for Lives Remaining Labs:
 - **Azure Databricks workspace** (Premium tier with Unity Catalog)
 - **Azure Data Lake Storage (ADLS Gen2)** for the data lake

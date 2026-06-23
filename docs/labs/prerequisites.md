@@ -1,32 +1,104 @@
-# Prerequisites (Azure Setup)
+# Prerequisites & Setup (Azure)
 
-Before starting labs, ensure you have:
+Before Lab 0, you need an Azure Databricks workspace with Unity Catalog and the
+`labs` catalog/schemas the labs read and write.
 
-1. **Azure subscription** with Databricks, Storage, and Entra permissions
-2. **Azure Databricks workspace** (Premium SKU) in your resource group
-3. **Azure Data Lake Storage (ADLS Gen2)** created with a blob container
-4. **Service Principal** (Entra app registration) with Storage Blob roles
-5. **Databricks personal access token (PAT)** for API access
-6. **Python 3.9+** installed locally
-7. **Azure CLI** authenticated (`az login`)
+There are **two ways** to set this up. Start with **Path A (UI)** — it's the
+default for the labs and teaches the Unity Catalog concepts as you click. Use
+**Path B (Terraform)** later if you want repeatable, scripted infrastructure.
 
-## Provision & bootstrap
-
-1. **Provision infrastructure** with Terraform (`terraform/`) — creates the
-   Databricks Premium workspace, ADLS Gen2 account/container, the Access
-   Connector managed identity, and the Unity Catalog catalog/schemas. Either:
-   - `cd terraform && terraform init && terraform apply`, **or**
-2. **Bootstrap Unity Catalog interactively** by running
-   `notebooks/setup/00_unity_catalog_setup.py` once per environment. It creates
-   the `labs` catalog, the `bronze`/`silver`/`gold` schemas, the external
-   location over ADLS Gen2, and the job grants that every later lab assumes
-   already exist.
-
-> ⚠️ The labs read/write three-level Unity Catalog names (`labs.bronze.*`,
-> `labs.silver.*`, `labs.gold.*`). You **must** complete the Terraform apply or
-> the setup notebook before Lab 0, or the pipelines will fail with
-> "catalog/schema not found".
-
-👉 **[See Azure Setup Guide →](../setup-azure.md)** (coming soon)
+> ⚠️ Every lab uses three-level Unity Catalog names (`labs.bronze.*`,
+> `labs.silver.*`, `labs.gold.*`). You **must** finish one of the two paths
+> below before Lab 0, or the pipelines fail with "catalog/schema not found".
 
 ---
+
+## What you need first
+
+| Requirement | Notes |
+|-------------|-------|
+| **Azure subscription** | With permission to create Databricks, Storage, and Entra resources |
+| **Python 3.9+** locally | For Lab 0's event generator |
+| **Azure CLI** (`az login`) | For uploading sample data (Lab 0) |
+| **Terraform ≥ 1.0** | **Only** for Path B (advanced) |
+
+---
+
+## 🅰️ Path A — Set up via the UI (default)
+
+### Step 1 — Create the workspace & storage (Azure Portal)
+
+1. **Azure Databricks workspace** — Portal → *Create resource* → **Azure
+   Databricks** → pricing tier **Premium** (required for Unity Catalog).
+2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account** →
+   enable **Hierarchical namespace** (this makes it ADLS Gen2). Create a
+   container named `datalake`.
+3. **Access Connector for Azure Databricks** — Portal → *Create resource* →
+   **Access Connector for Azure Databricks** (a managed identity). Then on the
+   storage account → **Access Control (IAM)** → assign **Storage Blob Data
+   Contributor** to that Access Connector.
+
+### Step 2 — Attach a Unity Catalog metastore
+
+In the **Databricks Account console** (accounts.azuredatabricks.net) →
+**Catalog / Metastores**, create or attach a metastore in your region and assign
+it to your workspace. (Most new workspaces already have one.)
+
+### Step 3 — Bootstrap the catalog (run the setup notebook)
+
+Import this repo into the workspace (**Workspace → Create → Git folder**) and
+run **`notebooks/setup/00_unity_catalog_setup.py`** on a UC-enabled cluster. Set
+the widgets:
+
+| Widget | Example |
+|--------|---------|
+| `catalog` | `labs` |
+| `storage_account` | `lrlstorage` |
+| `container` | `datalake` |
+| `access_connector_id` | `/subscriptions/.../accessConnectors/<name>` |
+| `job_principal` | (optional) a group/SP to grant access |
+
+The notebook creates the **storage credential**, **external location**, the
+`labs` **catalog**, the `bronze`/`silver`/`gold` **schemas**, and the **grants**
+— all idempotent (`CREATE ... IF NOT EXISTS`), so it's safe to re-run.
+
+> Prefer pure click-ops? You can do the same in **Catalog Explorer**: create a
+> storage credential → external location → catalog `labs` → schemas
+> `bronze`/`silver`/`gold`. The notebook just scripts those clicks.
+
+### Step 4 — Verify
+
+```sql
+SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
+```
+
+✅ You're ready for [Lab 0](lab-0-setup-data-generation.md).
+
+---
+
+## 🅱️ Path B — Provision via Terraform (advanced, optional)
+
+Once you're comfortable with the concepts, the [`terraform/`](../../terraform/)
+folder provisions the **same** setup as repeatable infrastructure-as-code:
+workspace, ADLS Gen2 + Access Connector, the storage credential/external
+location, and the `labs` catalog/schemas/grants.
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # fill in your values
+terraform init
+terraform plan
+terraform apply
+```
+
+Use this for dev/staging/prod environments (pass a different `catalog_name`).
+See [`terraform/README.md`](../../terraform/README.md) for variables and details.
+
+> You only need **one** path. If you ran Terraform, skip Path A; the setup
+> notebook is still handy for re-applying grants interactively.
+
+---
+
+👉 **[Detailed Azure Setup Guide →](../setup-azure.md)** (coming soon)
+
+**Next:** [Lab 0 — Sample data generation →](lab-0-setup-data-generation.md)

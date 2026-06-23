@@ -2,7 +2,7 @@
 
 **Goal:** Generate 100,000 synthetic player events and land them in ADLS Gen2 so the DLT pipelines have data to ingest.
 
-⏱️ **Time:** ~30 min &nbsp;|&nbsp; **Prerequisites:** [Setup / Unity Catalog bootstrap](prerequisites.md#provision--bootstrap)
+⏱️ **Time:** ~30 min &nbsp;|&nbsp; **Prerequisites:** [Setup / Unity Catalog bootstrap](prerequisites.md)
 
 > 🎮 **Mission Briefing**
 >
@@ -56,7 +56,7 @@ You should see `(100000, 10)` and a distribution across the 6 event types.
 
 ### Step 4 — Create the `events/` path in ADLS Gen2
 
-If you ran the Terraform in [prerequisites](prerequisites.md#provision--bootstrap) the container already exists. Otherwise create it:
+If you already created the `datalake` container during [setup](prerequisites.md) (UI Step 1 or Terraform), it exists. Otherwise create it:
 
 ```bash
 az storage fs directory create \

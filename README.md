@@ -60,17 +60,17 @@ LivesRemaining-Labs/
 - **Azure subscription** with resource group
 - **Azure Databricks workspace** (Premium tier recommended for Unity Catalog)
 - **Azure Storage Account** (ADLS Gen2) for data lake
-- **Terraform** >= 1.0 with Azure provider
 - **Python** 3.9+ (for local script testing)
-- **PowerShell** or **Azure CLI** for resource provisioning
+- **Azure CLI** (`az login`) for resource provisioning and data upload
+- **Terraform** >= 1.0 with Azure provider — *optional, only for the advanced IaC setup path*
 
-👉 **[See setup guide →](docs/setup-azure.md)** (coming soon)
+👉 **[See setup guide →](docs/labs/prerequisites.md)**
 
 ## Quick Start
 
 1. **Review** `docs/architecture.md` for design decisions
-2. **Provision infra** via Terraform (`terraform/`) — workspace, ADLS Gen2, Unity Catalog
-3. **Bootstrap Unity Catalog** — `terraform apply` creates the `labs` catalog/schemas, or run `notebooks/setup/00_unity_catalog_setup.py`
+2. **Set up the workspace & Unity Catalog** — follow [Path A (UI)](docs/labs/prerequisites.md): create the workspace/storage, then run `notebooks/setup/00_unity_catalog_setup.py` to bootstrap the `labs` catalog/schemas
+3. **(Advanced, optional)** Provision the same infra via [Terraform](terraform/README.md) for repeatable dev/staging/prod environments
 4. **Complete labs** in order (see `docs/labs.md`)
 5. **Run DLT pipelines** to ingest and transform events
 6. **Train churn model** and set up scoring jobs
@@ -80,7 +80,7 @@ LivesRemaining-Labs/
 
 | Lab | Duration | Focus | Link |
 |-----|----------|-------|------|
-| **Setup** | 15 min | Unity Catalog bootstrap (catalog, schemas, grants) | [Start](docs/labs/prerequisites.md#provision--bootstrap) |
+| **Setup** | 15 min | Workspace + Unity Catalog (UI default, Terraform optional) | [Start](docs/labs/prerequisites.md) |
 | **Lab 0** | 30 min | Generate synthetic events | [Start](docs/labs/lab-0-setup-data-generation.md) |
 | **Lab 1** | 1 hr | Bronze ingestion (DLT Autoloader) | [Start](docs/labs/lab-1-bronze-ingestion.md) |
 | **Lab 2** | 1.5 hr | Silver transformations & quality checks | [Start](docs/labs/lab-2-silver-transformations.md) |
