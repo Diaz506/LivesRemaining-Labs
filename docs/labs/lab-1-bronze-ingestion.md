@@ -41,6 +41,11 @@ display(dbutils.fs.ls(EVENTS_PATH))
 
 > If this fails with access denied, re-run the UC setup notebook and confirm the
 > Access Connector has **Storage Blob Data Contributor** on the storage account.
+>
+> ⚠️ This path assumes the storage account **`lrlstorage`** and container
+> **`datalake`** from the [prerequisites](prerequisites.md). If you used
+> different names, update `EVENTS_PATH` here and `src/dlt/bronze_pipeline.py` to
+> match.
 
 ### Step 3 — Verify data is reachable
 

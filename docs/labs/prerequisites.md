@@ -24,6 +24,32 @@ default for the labs and teaches the Unity Catalog concepts as you click. Use
 
 ---
 
+## 📛 Names used throughout these labs
+
+Use these names when you create resources so the notebook widgets and pipeline
+code work without edits. Change them only if you update every reference
+consistently.
+
+| Resource | Name used in the labs |
+|----------|-----------------------|
+| Resource group | `lrl-rg` |
+| Region | `eastus` |
+| Storage account (ADLS Gen2) | `lrlstorage` |
+| Container | `datalake` |
+| Access Connector (managed identity) | `lrl-connector` |
+| Unity Catalog catalog | `labs` |
+
+> ⚠️ **Storage names are baked into the pipeline.**
+> `src/dlt/bronze_pipeline.py` reads
+> `abfss://datalake@lrlstorage.dfs.core.windows.net/events/`. If you pick a
+> different **storage account** or **container** name, update that path in
+> `bronze_pipeline.py` **and** the matching widgets in
+> `notebooks/dlt/01_ingest_bronze.py` / `notebooks/setup/00_unity_catalog_setup.py`.
+> Storage account names must be globally unique and lowercase — if `lrlstorage`
+> is taken, choose another and update the path.
+
+---
+
 ## 🅰️ Path A — Set up via the UI (default)
 
 ### Step 1 — Create the workspace & storage (Azure Portal)
@@ -39,13 +65,15 @@ default for the labs and teaches the Unity Catalog concepts as you click. Use
      cloud storage at any time"*, which is exactly the UC external-location
      pattern these labs use. Pick **Hybrid** only if you later need custom
      clusters, GPUs, or init scripts.
-2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account** →
-   enable **Hierarchical namespace** (this makes it ADLS Gen2). Create a
-   container named `datalake`.
+2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account**,
+   name it **`lrlstorage`** (must be globally unique — pick another lowercase
+   name if taken, and update the pipeline path accordingly) → enable
+   **Hierarchical namespace** (this makes it ADLS Gen2). Create a container named
+   **`datalake`**.
 3. **Access Connector for Azure Databricks** — Portal → *Create resource* →
-   **Access Connector for Azure Databricks** (a managed identity). Then on the
-   storage account → **Access Control (IAM)** → assign **Storage Blob Data
-   Contributor** to that Access Connector.
+   **Access Connector for Azure Databricks** (a managed identity), name it
+   **`lrl-connector`**. Then on the storage account → **Access Control (IAM)** →
+   assign **Storage Blob Data Contributor** to that Access Connector.
 
 ### Step 2 — Attach a Unity Catalog metastore
 
