@@ -100,21 +100,46 @@ usually already see catalogs here — nothing more to do.
 
 ### Step 3 — Bootstrap the catalog (run the setup notebook)
 
-Import this repo into the workspace (**Workspace → Create → Git folder**) and
-run **`notebooks/setup/00_unity_catalog_setup.py`** on **serverless** (or any
-UC-enabled cluster). Set the widgets:
+**What this step does and why.** So far you have a workspace, an empty ADLS Gen2
+account, and an Access Connector — but Unity Catalog doesn't yet know how to
+reach your storage, and there's no place to put tables. This step runs one
+notebook that wires it all together by creating four things:
 
-| Widget | Example |
-|--------|---------|
-| `catalog` | `labs` |
-| `storage_account` | `lrlstorage01` |
-| `container` | `datalake` |
-| `access_connector_id` | `/subscriptions/.../accessConnectors/<name>` |
-| `job_principal` | (optional) a group/SP to grant access |
+| It creates | What it is / why you need it |
+|------------|------------------------------|
+| **Storage credential** | Wraps your **Access Connector** (managed identity) so UC can authenticate to ADLS Gen2 — **no keys or secrets** stored anywhere. |
+| **External location** | Registers the path `abfss://datalake@lrlstorage01…` and says *"use that credential to read/write here."* This is what replaces the old mount. |
+| **Catalog `labs` + schemas** | The `labs` catalog with `bronze` / `silver` / `gold` schemas — the medallion namespaces every later lab writes to (`labs.bronze.*`, etc.). |
+| **Grants** | Least-privilege permissions so the pipelines can use the catalog/schemas and read/write the external location. |
 
-The notebook creates the **storage credential**, **external location**, the
-`labs` **catalog**, the `bronze`/`silver`/`gold` **schemas**, and the **grants**
-— all idempotent (`CREATE ... IF NOT EXISTS`), so it's safe to re-run.
+Everything uses `CREATE ... IF NOT EXISTS`, so the notebook is **idempotent** —
+safe to re-run if a value was wrong.
+
+**Before you run — grab the Access Connector resource ID.** In the Azure Portal,
+open your **`lrl-connector`** Access Connector → **Overview** (or **Properties**)
+→ copy the **Resource ID**. It looks like:
+
+```
+/subscriptions/<sub-id>/resourceGroups/lrl-rg/providers/Microsoft.Databricks/accessConnectors/lrl-connector
+```
+
+**Run it:**
+1. Import this repo into the workspace: **Workspace → Create → Git folder**,
+   paste the repo URL.
+2. Open **`notebooks/setup/00_unity_catalog_setup.py`** and attach it to
+   **Serverless** (or any UC-enabled cluster).
+3. Fill in the widgets at the top, then **Run all**:
+
+| Widget | What to enter | Why |
+|--------|---------------|-----|
+| `catalog` | `labs` | Top-level catalog name the labs expect. |
+| `storage_account` | `lrlstorage01` | Builds the `abfss://` URL for the external location. |
+| `container` | `datalake` | The container you created in Step 1. |
+| `access_connector_id` | the Resource ID you copied above | Lets UC authenticate to ADLS Gen2. |
+| `job_principal` | *(optional)* a group or service principal | Grants pipeline access to that identity; leave blank to skip grants. |
+
+As it runs you'll see it print the catalog, container URI, and "External location
+… ready", then list the `bronze` / `silver` / `gold` schemas.
 
 > Prefer pure click-ops? You can do the same in **Catalog Explorer**: create a
 > storage credential → external location → catalog `labs` → schemas
