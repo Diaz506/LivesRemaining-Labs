@@ -88,10 +88,21 @@ consistently.
 
 ### Step 2 — Open the workspace & confirm a Unity Catalog metastore
 
-From the Azure Portal → your **`lrl-workspace`** resource → click **Launch
-Workspace**. Once inside, open **Catalog** in the left nav. Modern Azure
-Databricks **auto-creates and attaches a metastore per region**, so you'll
-usually already see catalogs here — nothing more to do.
+**What this step does and why.** Unity Catalog (UC) is the governance layer that
+holds **catalogs → schemas → tables** and controls who can access them. Before
+you can create the `labs` catalog in Step 3, your workspace must be attached to a
+UC **metastore** — the top-level container (one per region) that UC catalogs live
+in. This step is just to **confirm** that attachment exists; you usually don't
+have to create anything.
+
+1. Azure Portal → your **`lrl-workspace`** resource → click **Launch Workspace**.
+2. In the workspace left nav, click **Catalog** to open Catalog Explorer.
+3. If you see catalogs listed (e.g. `<workspace-name>`, `system`, `samples`),
+   a metastore **is attached** — you're done with this step. Modern Azure
+   Databricks **auto-creates and attaches a metastore per region** for you.
+
+> You won't see a `labs` catalog yet — that's what Step 3 creates. Seeing the
+> built-in catalogs is enough to confirm the metastore is in place.
 
 > **Only if Catalog reports no metastore:** go to the **Databricks Account
 > console** (accounts.azuredatabricks.net) → **Catalog / Metastores**, create or
@@ -147,9 +158,26 @@ As it runs you'll see it print the catalog, container URI, and "External locatio
 
 ### Step 4 — Verify
 
+**What this step does and why.** A quick sanity check that Step 3 actually
+created the medallion namespaces. If these schemas exist, every later lab can
+write to `labs.bronze.*`, `labs.silver.*`, and `labs.gold.*` without the
+"catalog/schema not found" error.
+
+Run this in a SQL cell (or the notebook):
+
 ```sql
 SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
 ```
+
+You should see **`bronze`**, **`silver`**, and **`gold`** (plus the built-in
+`information_schema` / `default`). You can also confirm visually in **Catalog
+Explorer** — the `labs` catalog now appears alongside `system` and `samples`,
+with the three schemas under it.
+
+> Don't see them? Re-open Step 3's notebook and re-run it — check that
+> `access_connector_id` was filled in (the "External location … ready" line must
+> print) and that there were no permission errors. It's idempotent, so re-running
+> is safe.
 
 ✅ You're ready for [Lab 0](lab-0-setup-data-generation.md).
 
