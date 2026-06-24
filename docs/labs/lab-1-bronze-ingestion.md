@@ -20,27 +20,42 @@ The Bronze layer stores raw events *as-is* for audit and replay. DLT + Autoloade
 
 ## 🪜 Steps
 
-### Step 1 — Import the repo into the workspace
+### Step 1 — Make the repo available in the workspace
 
 **What this step does and why.** Brings the pipeline code (`bronze_pipeline.py`)
 and the interactive walkthrough notebook into Databricks so the DLT pipeline can
 point at them. A **Git folder** keeps them in sync with `main`.
 
-In the Databricks workspace: **Workspace → (your folder) → Create → Git folder**, point it at this repo. You should see `src/dlt/bronze_pipeline.py` and `notebooks/dlt/01_ingest_bronze.py`.
+**Already added this repo as a Git folder** during the prerequisites or Lab 0?
+Then you're set — just open it and click **Pull** to get the latest, and skip to
+Step 2.
 
-### Step 2 — Confirm Unity Catalog can reach ADLS Gen2
+**First time?** Add it as a Git folder:
 
-The pipeline reads `abfss://datalake@lrlstorage01.dfs.core.windows.net/events/`
-directly through the Unity Catalog **external location** created in the
+1. **Workspace → Create → Git folder**
+2. **Git repository URL:** `https://github.com/Diaz506/LivesRemaining-Labs.git`
+3. Leave provider = **GitHub**; the folder name auto-fills to `LivesRemaining-Labs`.
+4. Click **Create Git folder**.
+
+You should now see `src/dlt/bronze_pipeline.py` and `notebooks/dlt/01_ingest_bronze.py` inside the folder.
+
+### Step 2 — How the pipeline reaches your data (no mount, no SP)
+
+**What this step does and why.** Just context so the next step makes sense — there's
+nothing to configure here. The pipeline reads
+`abfss://datalake@lrlstorage01.dfs.core.windows.net/events/` **directly** through
+the Unity Catalog **external location** you created in the
 [prerequisites](prerequisites.md) (`notebooks/setup/00_unity_catalog_setup.py`).
-There's **no mount and no service principal** to configure — UC's Access
-Connector (managed identity) handles storage auth, so this works on serverless.
+There's **no mount and no service principal** — UC's Access Connector (managed
+identity) handles storage auth, which is why this works on serverless.
 
-Quick check (run on serverless or any UC-enabled compute):
+You'll **verify** that access in Step 3 (the walkthrough notebook does it for you).
+If you want a quick one-off check now, open **any notebook on Serverless**, paste
+this into a cell, and run it:
 
 ```python
 EVENTS_PATH = "abfss://datalake@lrlstorage01.dfs.core.windows.net/events/"
-display(dbutils.fs.ls(EVENTS_PATH))
+display(dbutils.fs.ls(EVENTS_PATH))   # expect to see raw_events.csv
 ```
 
 > If this fails with access denied, re-run the UC setup notebook and confirm the
