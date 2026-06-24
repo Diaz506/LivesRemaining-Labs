@@ -69,9 +69,15 @@ consistently.
      clusters, GPUs, or init scripts.
 2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account**,
    name it **`lrlstorage01`** (must be globally unique — pick another lowercase
-   name if taken, and update the pipeline path accordingly) → enable
-   **Hierarchical namespace** (this makes it ADLS Gen2). Create a container named
-   **`datalake`**.
+   name if taken, and update the pipeline path accordingly).
+   - **Basics tab:** Resource group `lrl-rg`; **Performance → Standard**;
+     **Redundancy → LRS** (cheapest, fine for a lab — GRS also works). Put it in
+     the **same region as your Databricks workspace**.
+   - **Advanced tab → check ✅ “Enable hierarchical namespace.”** This is what
+     turns the account into **ADLS Gen2** — without it the `abfss://` paths the
+     pipeline uses won't work.
+   - After the account is created, open it → **Containers → + Container** and
+     create one named **`datalake`**.
 3. **Access Connector for Azure Databricks** — Portal → *Create resource* →
    **Access Connector for Azure Databricks** (a managed identity), name it
    **`lrl-connector`**. Then on the storage account → **Access Control (IAM)** →
