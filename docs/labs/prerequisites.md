@@ -55,7 +55,10 @@ consistently.
 
 ### Step 1 — Create the workspace & storage (Azure Portal)
 
-1. **Azure Databricks workspace** — Portal → *Create resource* → **Azure
+1. **Resource group** — Portal → *Resource groups* → **Create**, name it
+   **`lrl-rg`** in your chosen region. Create everything below inside it so the
+   lab resources stay together and are easy to clean up afterward.
+2. **Azure Databricks workspace** — Portal → *Create resource* → **Azure
    Databricks**, name it **`lrl-workspace`** (any name works — no code depends on
    it) → pricing tier **Premium** (required for Unity Catalog).
    - **Workspace type → leave the default `Serverless`.** These labs read/write
@@ -67,7 +70,7 @@ consistently.
      cloud storage at any time"*, which is exactly the UC external-location
      pattern these labs use. Pick **Hybrid** only if you later need custom
      clusters, GPUs, or init scripts.
-2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account**,
+3. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account**,
    name it **`lrlstorage01`** (must be globally unique — pick another lowercase
    name if taken, and update the pipeline path accordingly).
    - **Basics tab:** Resource group `lrl-rg`; **Performance → Standard**;
@@ -78,7 +81,7 @@ consistently.
      pipeline uses won't work.
    - After the account is created, open it → **Containers → + Container** and
      create one named **`datalake`**.
-3. **Access Connector for Azure Databricks** — Portal → *Create resource* →
+4. **Access Connector for Azure Databricks** — Portal → *Create resource* →
    **Access Connector for Azure Databricks** (a managed identity), name it
    **`lrl-connector`**. Then on the storage account → **Access Control (IAM)** →
    assign **Storage Blob Data Contributor** to that Access Connector.
