@@ -56,9 +56,9 @@ def bronze_events():
     Autoloader pipeline: Read raw events from cloud storage.
     
     Configuration:
-    - Source: abfss://datalake@lrlstorage.dfs.core.windows.net/events/
+    - Source: abfss://datalake@lrlstorage01.dfs.core.windows.net/events/
     - Format: CSV with headers
-    - Checkpoint: abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/
+    - Checkpoint: abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/events/
     - Access: Unity Catalog external location (no mount, serverless-friendly)
     - Mode: Incrementally read new files only
     
@@ -73,8 +73,8 @@ def bronze_events():
     # Read ADLS Gen2 directly via the Unity Catalog external location.
     # No mount required — works on serverless DLT compute.
     # See notebooks/setup/00_unity_catalog_setup.py for the external location.
-    source_path = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
-    checkpoint_path = "abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/"
+    source_path = "abfss://datalake@lrlstorage01.dfs.core.windows.net/events/"
+    checkpoint_path = "abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/events/"
     
     return (
         spark.readStream.format("cloudFiles")

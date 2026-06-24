@@ -35,18 +35,18 @@ consistently.
 | Resource group | `lrl-rg` |
 | Region | `eastus` |
 | Databricks workspace | `lrl-workspace` (free to choose — no code references it) |
-| Storage account (ADLS Gen2) | `lrlstorage` |
+| Storage account (ADLS Gen2) | `lrlstorage01` |
 | Container | `datalake` |
 | Access Connector (managed identity) | `lrl-connector` |
 | Unity Catalog catalog | `labs` |
 
 > ⚠️ **Storage names are baked into the pipeline.**
 > `src/dlt/bronze_pipeline.py` reads
-> `abfss://datalake@lrlstorage.dfs.core.windows.net/events/`. If you pick a
+> `abfss://datalake@lrlstorage01.dfs.core.windows.net/events/`. If you pick a
 > different **storage account** or **container** name, update that path in
 > `bronze_pipeline.py` **and** the matching widgets in
 > `notebooks/dlt/01_ingest_bronze.py` / `notebooks/setup/00_unity_catalog_setup.py`.
-> Storage account names must be globally unique and lowercase — if `lrlstorage`
+> Storage account names must be globally unique and lowercase — if `lrlstorage01`
 > is taken, choose another and update the path.
 
 ---
@@ -68,7 +68,7 @@ consistently.
      pattern these labs use. Pick **Hybrid** only if you later need custom
      clusters, GPUs, or init scripts.
 2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account**,
-   name it **`lrlstorage`** (must be globally unique — pick another lowercase
+   name it **`lrlstorage01`** (must be globally unique — pick another lowercase
    name if taken, and update the pipeline path accordingly) → enable
    **Hierarchical namespace** (this makes it ADLS Gen2). Create a container named
    **`datalake`**.
@@ -92,7 +92,7 @@ UC-enabled cluster). Set the widgets:
 | Widget | Example |
 |--------|---------|
 | `catalog` | `labs` |
-| `storage_account` | `lrlstorage` |
+| `storage_account` | `lrlstorage01` |
 | `container` | `datalake` |
 | `access_connector_id` | `/subscriptions/.../accessConnectors/<name>` |
 | `job_principal` | (optional) a group/SP to grant access |

@@ -173,7 +173,7 @@
 # MAGIC
 # MAGIC 2. CREATE STORAGE CREDENTIAL (wraps the Access Connector)
 # MAGIC
-# MAGIC 3. CREATE EXTERNAL LOCATION 'abfss://datalake@lrlstorage...'
+# MAGIC 3. CREATE EXTERNAL LOCATION 'abfss://datalake@lrlstorage01...'
 # MAGIC    └─ UC now governs reads/writes via grants
 # MAGIC
 # MAGIC 4. DLT Autoloader reads the abfss:// path directly
@@ -206,7 +206,7 @@
 
 # COMMAND ----------
 
-EVENTS_PATH = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
+EVENTS_PATH = "abfss://datalake@lrlstorage01.dfs.core.windows.net/events/"
 
 try:
     dbutils.fs.ls(EVENTS_PATH.rsplit("/events/", 1)[0] + "/")
@@ -349,7 +349,7 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC Autoloader is designed for incremental ingestion. To test:
 # MAGIC
 # MAGIC 1. **First run:** Ingest all rows (cold start)
-# MAGIC 2. **Upload new file** to `abfss://datalake@lrlstorage.dfs.core.windows.net/events/new_events.csv`
+# MAGIC 2. **Upload new file** to `abfss://datalake@lrlstorage01.dfs.core.windows.net/events/new_events.csv`
 # MAGIC 3. **Second run:** Only new file is processed (checkpoint prevents reprocessing)
 # MAGIC
 # MAGIC **Why this matters:**
@@ -397,7 +397,7 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC **Solution:** Upload raw_events.csv using Azure CLI or Azure Storage Explorer:
 # MAGIC ```bash
 # MAGIC azcopy copy "data/raw_events.csv" \
-# MAGIC   "https://lrlstorage.blob.core.windows.net/datalake/events/" \
+# MAGIC   "https://lrlstorage01.blob.core.windows.net/datalake/events/" \
 # MAGIC   --recursive
 # MAGIC ```
 # MAGIC
@@ -407,8 +407,8 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC ### Issue: Expected data not showing up
 # MAGIC **Solution:**
 # MAGIC 1. Check DLT logs: Workflows → Delta Live Tables → Pipeline → Logs
-# MAGIC 2. Verify checkpoint: `dbutils.fs.ls("abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/")`
-# MAGIC 3. Check schema location: `dbutils.fs.ls("abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/")`
+# MAGIC 2. Verify checkpoint: `dbutils.fs.ls("abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/")`
+# MAGIC 3. Check schema location: `dbutils.fs.ls("abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/events/")`
 
 # COMMAND ----------
 

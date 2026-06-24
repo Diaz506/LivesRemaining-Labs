@@ -45,7 +45,7 @@
 # COMMAND ----------
 
 dbutils.widgets.text("catalog", "labs", "Catalog name")
-dbutils.widgets.text("storage_account", "lrlstorage", "ADLS Gen2 account name")
+dbutils.widgets.text("storage_account", "lrlstorage01", "ADLS Gen2 account name")
 dbutils.widgets.text("container", "datalake", "ADLS Gen2 container")
 dbutils.widgets.text("access_connector_id", "", "Databricks Access Connector resource ID (managed identity)")
 dbutils.widgets.text("job_principal", "", "Service principal / group to grant job access (optional)")

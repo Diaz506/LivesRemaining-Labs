@@ -60,7 +60,7 @@ If you already created the `datalake` container during [setup](prerequisites.md)
 
 ```bash
 az storage fs directory create \
-  --account-name lrlstorage \
+  --account-name lrlstorage01 \
   --file-system datalake \
   --name events
 ```
@@ -69,18 +69,18 @@ az storage fs directory create \
 
 ```bash
 az storage fs file upload \
-  --account-name lrlstorage \
+  --account-name lrlstorage01 \
   --file-system datalake \
   --source data/raw_events.csv \
   --path events/raw_events.csv
 ```
 
-(Or use `azcopy copy "data/raw_events.csv" "https://lrlstorage.blob.core.windows.net/datalake/events/"`.)
+(Or use `azcopy copy "data/raw_events.csv" "https://lrlstorage01.blob.core.windows.net/datalake/events/"`.)
 
 ### Step 6 — Confirm the upload
 
 ```bash
-az storage fs file list --account-name lrlstorage --file-system datalake --path events -o table
+az storage fs file list --account-name lrlstorage01 --file-system datalake --path events -o table
 ```
 
 You should see `events/raw_events.csv`.

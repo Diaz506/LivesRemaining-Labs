@@ -6,7 +6,7 @@ metastore_id          = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 resource_group_name    = "lrl-rg"
 location               = "eastus"
 workspace_name         = "lrl-workspace"
-storage_account_name   = "lrlstorage"
+storage_account_name   = "lrlstorage01"
 storage_container_name = "datalake"
 
 catalog_name = "labs"

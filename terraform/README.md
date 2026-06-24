@@ -57,7 +57,7 @@ terraform apply
 | `resource_group_name` | `lrl-rg` | Azure resource group |
 | `location` | `eastus` | Azure region |
 | `workspace_name` | `lrl-workspace` | Databricks workspace name |
-| `storage_account_name` | `lrlstorage` | ADLS Gen2 account name |
+| `storage_account_name` | `lrlstorage01` | ADLS Gen2 account name |
 | `storage_container_name` | `datalake` | Blob container for Bronze/Silver/Gold |
 
 ## Unity Catalog Setup

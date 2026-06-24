@@ -29,7 +29,7 @@ variable "workspace_name" {
 variable "storage_account_name" {
   description = "ADLS Gen2 storage account name (3-24 lowercase alphanumeric chars)"
   type        = string
-  default     = "lrlstorage"
+  default     = "lrlstorage01"
 }
 
 variable "storage_container_name" {

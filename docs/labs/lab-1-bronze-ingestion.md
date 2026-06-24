@@ -26,7 +26,7 @@ In the Databricks workspace: **Workspace → (your folder) → Create → Git fo
 
 ### Step 2 — Confirm Unity Catalog can reach ADLS Gen2
 
-The pipeline reads `abfss://datalake@lrlstorage.dfs.core.windows.net/events/`
+The pipeline reads `abfss://datalake@lrlstorage01.dfs.core.windows.net/events/`
 directly through the Unity Catalog **external location** created in the
 [prerequisites](prerequisites.md) (`notebooks/setup/00_unity_catalog_setup.py`).
 There's **no mount and no service principal** to configure — UC's Access
@@ -35,14 +35,14 @@ Connector (managed identity) handles storage auth, so this works on serverless.
 Quick check (run on serverless or any UC-enabled compute):
 
 ```python
-EVENTS_PATH = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
+EVENTS_PATH = "abfss://datalake@lrlstorage01.dfs.core.windows.net/events/"
 display(dbutils.fs.ls(EVENTS_PATH))
 ```
 
 > If this fails with access denied, re-run the UC setup notebook and confirm the
 > Access Connector has **Storage Blob Data Contributor** on the storage account.
 >
-> ⚠️ This path assumes the storage account **`lrlstorage`** and container
+> ⚠️ This path assumes the storage account **`lrlstorage01`** and container
 > **`datalake`** from the [prerequisites](prerequisites.md). If you used
 > different names, update `EVENTS_PATH` here and `src/dlt/bronze_pipeline.py` to
 > match.
@@ -52,8 +52,8 @@ display(dbutils.fs.ls(EVENTS_PATH))
 Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6, Steps 2–4). Expected:
 
 ```
-✅ External location is reachable: abfss://datalake@lrlstorage.dfs.core.windows.net/events/
-✅ Found 1 files in abfss://datalake@lrlstorage.dfs.core.windows.net/events/:
+✅ External location is reachable: abfss://datalake@lrlstorage01.dfs.core.windows.net/events/
+✅ Found 1 files in abfss://datalake@lrlstorage01.dfs.core.windows.net/events/:
   - raw_events.csv
 ✅ Successfully read CSV! Shape: 100000 rows, 10 columns
 ```

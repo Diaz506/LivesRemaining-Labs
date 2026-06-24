@@ -15,11 +15,11 @@ Throughout, the labs assume these names (change them consistently if you differ)
 | Resource group | `lrl-rg` |
 | Region | `eastus` |
 | Databricks workspace | `lrl-workspace` |
-| Storage account (ADLS Gen2) | `lrlstorage` |
+| Storage account (ADLS Gen2) | `lrlstorage01` |
 | Container | `datalake` |
 | Databricks Access Connector | `lrl-connector` (managed identity) |
 | Unity Catalog catalog | `labs` |
-| Unity Catalog external location | `abfss://datalake@lrlstorage.dfs.core.windows.net/` |
+| Unity Catalog external location | `abfss://datalake@lrlstorage01.dfs.core.windows.net/` |
 
 ---
 
@@ -35,7 +35,7 @@ az group create --name lrl-rg --location eastus
 
 ```bash
 az storage account create \
-  --name lrlstorage \
+  --name lrlstorage01 \
   --resource-group lrl-rg \
   --location eastus \
   --sku Standard_LRS \
@@ -43,7 +43,7 @@ az storage account create \
   --hns true                       # hierarchical namespace = ADLS Gen2
 
 az storage fs create \
-  --account-name lrlstorage \
+  --account-name lrlstorage01 \
   --name datalake
 ```
 
@@ -85,7 +85,7 @@ az databricks access-connector create \
 # Grant it access to the data lake
 CONNECTOR_ID=$(az databricks access-connector show -n lrl-connector -g lrl-rg --query id -o tsv)
 PRINCIPAL_ID=$(az databricks access-connector show -n lrl-connector -g lrl-rg --query identity.principalId -o tsv)
-STORAGE_ID=$(az storage account show -n lrlstorage -g lrl-rg --query id -o tsv)
+STORAGE_ID=$(az storage account show -n lrlstorage01 -g lrl-rg --query id -o tsv)
 
 az role assignment create \
   --assignee-object-id "$PRINCIPAL_ID" \
@@ -117,10 +117,10 @@ SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
 ## ✅ Setup checklist
 
 - [ ] Resource group `lrl-rg` created
-- [ ] ADLS Gen2 `lrlstorage` with container `datalake`
+- [ ] ADLS Gen2 `lrlstorage01` with container `datalake`
 - [ ] Databricks **Premium** workspace running (Serverless workspace type)
 - [ ] Access Connector `lrl-connector` with **Storage Blob Data Contributor**
-- [ ] UC storage credential + external location (`abfss://datalake@lrlstorage…`) created
+- [ ] UC storage credential + external location (`abfss://datalake@lrlstorage01…`) created
 - [ ] `labs` catalog + `bronze`/`silver`/`gold` schemas exist
 
 **Next:** [Lab 0 — Sample data generation →](labs/lab-0-setup-data-generation.md)
