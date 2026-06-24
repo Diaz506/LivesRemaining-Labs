@@ -109,64 +109,81 @@ have to create anything.
 > attach a metastore in your region, and assign it to `lrl-workspace`. (This
 > requires account-admin rights.)
 
-### Step 3 — Bootstrap the catalog (run the setup notebook)
+### Step 3 — Bootstrap the catalog
 
 **What this step does and why.** So far you have a workspace, an empty ADLS Gen2
 account, and an Access Connector — but Unity Catalog doesn't yet know how to
-reach your storage, and there's no place to put tables. This step runs one
-notebook that wires it all together by creating four things:
+reach your storage, and there's no place to put tables. You'll create four
+things:
 
-| It creates | What it is / why you need it |
-|------------|------------------------------|
+| Object | What it is / why you need it |
+|--------|------------------------------|
 | **Storage credential** | Wraps your **Access Connector** (managed identity) so UC can authenticate to ADLS Gen2 — **no keys or secrets** stored anywhere. |
-| **External location** | Registers the path `abfss://datalake@lrlstorage01…` and says *"use that credential to read/write here."* This is what replaces the old mount. |
+| **External location** | Registers the path `abfss://datalake@lrlstorage01…` and says *"use that credential to read/write here."* This replaces the old mount. |
 | **Catalog `labs` + schemas** | The `labs` catalog with `bronze` / `silver` / `gold` schemas — the medallion namespaces every later lab writes to (`labs.bronze.*`, etc.). |
 | **Grants** | Least-privilege permissions so the pipelines can use the catalog/schemas and read/write the external location. |
 
-Everything uses `CREATE ... IF NOT EXISTS`, so the notebook is **idempotent** —
-safe to re-run if a value was wrong.
+The first two (storage credential + external location) are created in the
+**Catalog Explorer UI**; the catalog/schemas/grants are created by the **setup
+notebook**.
 
-**Before you run — grab the Access Connector resource ID.** In the Azure Portal,
-open your **`lrl-connector`** Access Connector → **Overview** (or **Properties**)
-→ copy the **Resource ID**. It looks like:
+> 💡 **Why the UI for the first two?** The SQL admin DDL
+> (`CREATE STORAGE CREDENTIAL` / `CREATE EXTERNAL LOCATION`) is **not parseable on
+> all compute** — on serverless you'll often hit
+> `PARSE_SYNTAX_ERROR near 'STORAGE'`. The Catalog Explorer UI is the reliable
+> path and is what the official Databricks docs use. (You also need the
+> **`CREATE STORAGE CREDENTIAL`** privilege — account/metastore admin has it.)
+
+**Before you start — grab the Access Connector resource ID.** Azure Portal → your
+**`lrl-connector`** Access Connector → **Overview** / **Properties** → copy the
+**Resource ID**:
 
 ```
 /subscriptions/<sub-id>/resourceGroups/lrl-rg/providers/Microsoft.Databricks/accessConnectors/lrl-connector
 ```
 
-**Run it:**
+#### 3a — Create the storage credential + external location (Catalog Explorer UI)
+
+In the workspace, open **Catalog** (left nav) → **+ Add**:
+
+1. **Add a storage credential**
+   - Credential type: **Azure Managed Identity**
+   - Name: **`labs_storage_cred`**
+   - Access Connector ID: the Resource ID you copied above
+2. **Add an external location**
+   - Name: **`labs_datalake`**
+   - URL: **`abfss://datalake@lrlstorage01.dfs.core.windows.net/`**
+   - Storage credential: **`labs_storage_cred`**
+   - Click **Test connection** — it should succeed (proves the Access Connector
+     has Storage Blob Data Contributor on the account).
+
+#### 3b — Create the catalog, schemas & grants (setup notebook)
+
 1. Import this repo into the workspace: **Workspace → Create → Git folder**,
    paste the repo URL.
 2. Open **`notebooks/setup/00_unity_catalog_setup.py`**. Opening it only shows
-   the code — you still need to attach compute: in the **top-right corner**,
-   click the **Connect** dropdown (it may say *Connect* or show a compute name)
-   → choose **Serverless** (or any UC-enabled cluster). Wait until it shows
-   connected/green.
-3. Fill in the widgets — these appear as **input boxes at the top of the
-   notebook** (above the first cell). **Edit the boxes, not the code.** The
-   defaults already match this lab (`labs` / `lrlstorage01` / `datalake`), so the
-   **only value you must add is `access_connector_id`** — paste the Resource ID
-   you copied above. Then **Run all**.
+   the code — attach compute: **top-right corner** → **Connect** dropdown →
+   **Serverless** (or any UC-enabled cluster). Wait for connected/green.
+3. The widgets are **input boxes at the top of the notebook** (edit the boxes,
+   not the code). The defaults already match this lab — and since you created the
+   storage objects in 3a, **leave `access_connector_id` BLANK** so the notebook
+   skips that DDL. Then **Run all**.
 
 | Widget | What to enter | Why |
 |--------|---------------|-----|
-| `catalog` | `labs` *(default — leave as-is)* | Top-level catalog name the labs expect. |
-| `storage_account` | `lrlstorage01` *(default — leave as-is)* | Builds the `abfss://` URL for the external location. |
-| `container` | `datalake` *(default — leave as-is)* | The container you created in Step 1. |
-| `access_connector_id` | **the Resource ID you copied above (required)** | Lets UC authenticate to ADLS Gen2. |
-| `job_principal` | *(optional)* a group or service principal | Grants pipeline access to that identity; leave blank to skip grants. |
+| `catalog` | `labs` *(default)* | Top-level catalog name the labs expect. |
+| `storage_account` | `lrlstorage01` *(default)* | Builds the `abfss://` URL used for verification. |
+| `container` | `datalake` *(default)* | The container you created in Step 1. |
+| `access_connector_id` | **leave blank** | You already created the credential in 3a; blank skips the failing DDL. |
+| `job_principal` | *(optional)* a group or service principal | Grants pipeline access; leave blank to skip grants. |
 
-> ⚠️ **`access_connector_id` is essential.** If you leave it empty, the notebook
-> **skips** creating the storage credential + external location, and Lab 1 will
-> later fail to read from ADLS Gen2. The other defaults only need changing if you
-> used different names in Step 1.
+As it runs you'll see it create the `labs` catalog and list the `bronze` /
+`silver` / `gold` schemas, then verify the external location is reachable.
 
-As it runs you'll see it print the catalog, container URI, and "External location
-… ready", then list the `bronze` / `silver` / `gold` schemas.
-
-> Prefer pure click-ops? You can do the same in **Catalog Explorer**: create a
-> storage credential → external location → catalog `labs` → schemas
-> `bronze`/`silver`/`gold`. The notebook just scripts those clicks.
+> Already comfortable and on compute that supports the DDL? You *can* instead
+> paste the Access Connector ID into `access_connector_id` and let the notebook
+> attempt 3a for you — it's wrapped in `try/except`, so if the DDL fails it just
+> points you back to the UI steps above.
 
 ### Step 4 — Verify
 

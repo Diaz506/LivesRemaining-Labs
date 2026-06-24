@@ -78,31 +78,75 @@ print(f"External location:  {external_location}")
 # MAGIC Databricks Access Connector / managed identity) wrapped in an **external
 # MAGIC location**. Lab 0 uploads CSVs here and Lab 1's Autoloader reads from it.
 # MAGIC
-# MAGIC > If your Terraform already created the storage credential and external
-# MAGIC > location, you can skip this cell — the `CREATE ... IF NOT EXISTS`
-# MAGIC > statements are idempotent and safe to re-run.
+# MAGIC ### ✅ Recommended: create these two objects in **Catalog Explorer UI**
+# MAGIC The UC admin DDL (`CREATE STORAGE CREDENTIAL` / `CREATE EXTERNAL LOCATION`)
+# MAGIC is **not parseable on all compute** (you may hit
+# MAGIC `PARSE_SYNTAX_ERROR near 'STORAGE'` on serverless). The reliable path is the
+# MAGIC UI — and it's what the official docs use:
+# MAGIC
+# MAGIC 1. **Catalog** (left nav) → **+ Add** → **Add a storage credential**
+# MAGIC    - Credential type: **Azure Managed Identity**
+# MAGIC    - Name: **`labs_storage_cred`** (i.e. `<catalog>_storage_cred`)
+# MAGIC    - Access Connector ID: your `lrl-connector` **Resource ID**
+# MAGIC 2. **Catalog** → **+ Add** → **Add an external location**
+# MAGIC    - Name: **`labs_datalake`** (i.e. `<catalog>_datalake`)
+# MAGIC    - URL: **`abfss://datalake@lrlstorage01.dfs.core.windows.net/`**
+# MAGIC    - Storage credential: **`labs_storage_cred`**
+# MAGIC
+# MAGIC Then **leave the `access_connector_id` widget blank** and run the rest of
+# MAGIC this notebook (Parts 3–4) to create the catalog, schemas, and grants.
+# MAGIC
+# MAGIC ### ⚙️ Optional: try the SQL DDL below
+# MAGIC If you provide the `access_connector_id` widget, the next cell *attempts*
+# MAGIC the DDL. It's wrapped in `try/except` — if your compute rejects it, the
+# MAGIC notebook keeps going and tells you to use the UI steps above.
 
 # COMMAND ----------
 
 if access_connector_id:
-    spark.sql(f"""
-        CREATE STORAGE CREDENTIAL IF NOT EXISTS {storage_credential}
-        WITH AZURE_MANAGED_IDENTITY (
-            ACCESS_CONNECTOR_ID = '{access_connector_id}'
-        )
-        COMMENT 'Lives Remaining Labs — ADLS Gen2 access for {catalog}'
-    """)
+    try:
+        spark.sql(f"""
+            CREATE STORAGE CREDENTIAL IF NOT EXISTS {storage_credential}
+            WITH AZURE_MANAGED_IDENTITY (
+                ACCESS_CONNECTOR_ID = '{access_connector_id}'
+            )
+            COMMENT 'Lives Remaining Labs — ADLS Gen2 access for {catalog}'
+        """)
 
-    spark.sql(f"""
-        CREATE EXTERNAL LOCATION IF NOT EXISTS {external_location}
-        URL '{container_uri}/'
-        WITH (STORAGE CREDENTIAL {storage_credential})
-        COMMENT 'Lives Remaining Labs data lake root for {catalog}'
-    """)
-    print(f"External location '{external_location}' ready -> {container_uri}/")
+        spark.sql(f"""
+            CREATE EXTERNAL LOCATION IF NOT EXISTS {external_location}
+            URL '{container_uri}/'
+            WITH (STORAGE CREDENTIAL {storage_credential})
+            COMMENT 'Lives Remaining Labs data lake root for {catalog}'
+        """)
+        print(f"External location '{external_location}' ready -> {container_uri}/")
+    except Exception as e:
+        print(f"⚠️  Could not create the storage credential / external location via SQL: {e}")
+        print("   This is expected on compute that doesn't support UC admin DDL.")
+        print(f"   Create them in Catalog Explorer UI instead (see the markdown above):")
+        print(f"     - Storage credential '{storage_credential}' -> Access Connector managed identity")
+        print(f"     - External location  '{external_location}' -> {container_uri}/")
+        print("   Then re-run this notebook with the access_connector_id widget left BLANK.")
 else:
     print("access_connector_id not provided — skipping storage credential / external location.")
-    print("Provide the Access Connector resource ID widget, or create these in Terraform (uc.tf).")
+    print("Create them in Catalog Explorer UI (recommended — see markdown above), or in Terraform (uc.tf).")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Verify the external location is reachable
+# MAGIC Confirms either the UI- or SQL-created external location can read the
+# MAGIC container. Skips quietly if storage isn't wired up yet.
+
+# COMMAND ----------
+
+try:
+    display(spark.sql(f"LIST '{container_uri}/'"))
+    print(f"✅ External location reachable: {container_uri}/")
+except Exception as e:
+    print(f"⚠️  Cannot list {container_uri}/ yet — create the storage credential + "
+          f"external location (Catalog Explorer UI) and confirm the Access Connector "
+          f"has 'Storage Blob Data Contributor'. Details: {e}")
 
 # COMMAND ----------
 
