@@ -94,18 +94,33 @@ failed pipeline run. Open `notebooks/dlt/01_ingest_bronze.py`, attach it to
 for you. Here you just register it and tell it *where the code is* and *which
 catalog/schema to write to*.
 
-**Create the pipeline.** In the newer Databricks UI, click **+ New → ETL pipeline**
-(or **Jobs & Pipelines → Create → ETL pipeline**). *DLT is now labeled "ETL
-pipeline" / Lakeflow Declarative Pipelines — older docs call this "Workflows →
-Delta Live Tables".* Then set:
+**Create the pipeline.** Click **+ New → ETL pipeline** (or **Jobs & Pipelines →
+Create → ETL pipeline**). *DLT is now labeled "ETL pipeline" / Lakeflow Declarative
+Pipelines — older docs call this "Workflows → Delta Live Tables".* The newer UI is a
+**two-phase** flow:
+
+**Phase 1 — pick a starting point.** Choose **"Start with an empty pipeline"**
+(**Blank**) — *not* the sample, which generates demo tables you don't need. Set:
 
 | Setting | Value |
 |---------|-------|
 | Pipeline name | `lives-remaining-bronze-ingestion` |
-| Source code | `bronze_pipeline.py` in your Git folder (e.g. `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`) |
-| Destination | **Unity Catalog** → Catalog `labs`, Target schema `bronze` |
-| Pipeline mode | **Triggered** (runs once on demand, vs. Continuous which streams non-stop) |
-| Compute | **Serverless** (recommended — no cluster to size) |
+| Default catalog | `labs` |
+| Default schema | `bronze` |
+| Compute | **Serverless** (default — no cluster to size) |
+
+**Phase 2 — point it at your code.** A blank pipeline has no source yet. Open the
+pipeline's **Settings** (gear icon) → **Source code** / **Paths** → **Add** your
+Git-folder file:
+
+```
+/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py
+```
+
+Remove any sample/transformation path it auto-added, then **Save**.
+
+> 🏷️ **Triggered vs Continuous isn't a create-time field anymore.** Just clicking
+> **Run pipeline** (Step 5) does a one-off *triggered* run, which is what we want.
 
 ### Step 5 — Run the pipeline
 

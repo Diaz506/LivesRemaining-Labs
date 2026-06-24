@@ -184,21 +184,25 @@
 # MAGIC %md
 # MAGIC ## Part 6: Create the DLT Pipeline
 # MAGIC
-# MAGIC ### Step 1: Upload pipeline code to workspace
+# MAGIC ### Step 1: Register the pipeline (point it at the code)
 # MAGIC
-# MAGIC The DLT pipeline is defined in `src/dlt/bronze_pipeline.py`.
+# MAGIC The DLT pipeline is defined in `src/dlt/bronze_pipeline.py`. **Don't run that
+# MAGIC file** — register it as a pipeline so DLT runs it for you.
 # MAGIC
-# MAGIC In Databricks UI:
-# MAGIC 1. Click **+ New → ETL pipeline** (or **Jobs & Pipelines → Create → ETL
-# MAGIC    pipeline**). *DLT is now labeled "ETL pipeline"; older UIs called this
-# MAGIC    "Workflows → Delta Live Tables".*
-# MAGIC 2. Enter pipeline details:
+# MAGIC In the newer Databricks UI (Lakeflow), it's a **two-phase** flow:
+# MAGIC
+# MAGIC **Phase 1 — create:** Click **+ New → ETL pipeline** (or **Jobs & Pipelines →
+# MAGIC Create → ETL pipeline**). Choose **"Start with an empty pipeline"** (Blank, *not*
+# MAGIC the sample). Set:
 # MAGIC    - **Name**: `lives-remaining-bronze-ingestion`
-# MAGIC    - **Source code**: the `bronze_pipeline.py` in your Git folder
-# MAGIC      (e.g. `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`)
-# MAGIC    - **Destination**: Unity Catalog → Catalog `labs`, Target schema `bronze`
-# MAGIC    - **Compute**: **Serverless** (recommended — no cluster to size)
-# MAGIC    - **Mode**: Triggered (manual start, or scheduled)
+# MAGIC    - **Default catalog**: `labs`  ·  **Default schema**: `bronze`
+# MAGIC    - **Compute**: Serverless (default)
+# MAGIC
+# MAGIC **Phase 2 — add source:** Open the pipeline's **Settings** (gear) → **Source
+# MAGIC code / Paths** → **Add**
+# MAGIC `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`, remove any
+# MAGIC auto-added sample path, and **Save**. (Triggered vs Continuous isn't a create-time
+# MAGIC field — clicking **Run pipeline** does a triggered run.)
 # MAGIC
 # MAGIC ### Step 2: Define the ADLS Gen2 source path
 # MAGIC
