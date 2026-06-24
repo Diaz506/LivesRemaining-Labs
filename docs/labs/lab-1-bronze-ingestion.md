@@ -68,6 +68,12 @@ failed pipeline run. Open `notebooks/dlt/01_ingest_bronze.py`, attach it to
 
 ### Step 4 — Create the DLT pipeline
 
+> ⚠️ **Don't click *Run* on `bronze_pipeline.py`.** It's DLT source code, not a
+> notebook — running it on a normal cluster fails with
+> `ModuleNotFoundError: No module named 'dlt'` (the `dlt` module only exists in the
+> DLT pipeline runtime). You *register* it as a pipeline below, and DLT runs it for
+> you in Step 5.
+
 **What this step does and why.** A DLT pipeline is the managed job that runs
 `bronze_pipeline.py` — it handles checkpoints, schema, expectations, and lineage
 for you. Here you just register it and tell it *where the code is* and *which
@@ -125,6 +131,7 @@ Expect ~100k rows (minus any dropped by expectations) across all 6 event types.
 
 | Symptom | Fix |
 |---------|-----|
+| `ModuleNotFoundError: No module named 'dlt'` | You ran `bronze_pipeline.py` directly. Don't — register it as a DLT pipeline (Step 4) and **Start** it (Step 5). `dlt` only exists in the pipeline runtime. |
 | `Operation failed` / access denied on `abfss://…` | Re-run the [UC bootstrap](prerequisites.md); verify the Access Connector has **Storage Blob Data Contributor**. |
 | `No files found in …/events/` | Re-run **Lab 0** to land `raw_events.csv` (Option A upload, or Option B notebook). |
 | `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md). |

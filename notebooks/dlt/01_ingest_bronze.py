@@ -388,6 +388,13 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC %md
 # MAGIC ## Part 11: Troubleshooting
 # MAGIC
+# MAGIC ### Issue: "ModuleNotFoundError: No module named 'dlt'"
+# MAGIC **Cause:** You ran `src/dlt/bronze_pipeline.py` directly on a cluster/notebook.
+# MAGIC The `dlt` module only exists inside the DLT pipeline runtime.
+# MAGIC **Solution:** Don't run that file directly. Register it as a DLT pipeline
+# MAGIC (Part 6) and **Start** it (Part 7). This notebook (`01_ingest_bronze.py`) is the
+# MAGIC only one you run interactively.
+# MAGIC
 # MAGIC ### Issue: "Cannot reach the external location" / access denied
 # MAGIC **Solution:** Run notebooks/setup/00_unity_catalog_setup.py to create the storage
 # MAGIC credential + external location, and confirm the Access Connector has

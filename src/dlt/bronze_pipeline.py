@@ -2,6 +2,15 @@
 DLT Pipeline: Bronze Ingestion via Autoloader
 Lives Remaining Labs - Lab 1
 
+⚠️  DO NOT RUN THIS FILE DIRECTLY IN A NOTEBOOK/CLUSTER.
+    It is Delta Live Tables source code — `import dlt` only resolves inside the
+    DLT pipeline runtime. Running it on a normal cluster fails with
+    `ModuleNotFoundError: No module named 'dlt'`.
+    Instead, create a DLT pipeline that points at this file and Start it:
+        Workflows → Delta Live Tables → Create pipeline
+        (Source code = this file; Catalog = labs; Schema = bronze; Serverless)
+    See docs/labs/lab-1-bronze-ingestion.md (Steps 4–5).
+
 This pipeline uses Delta Live Tables Autoloader to ingest raw player events from
 Azure Blob Storage (ADLS Gen2) into a Bronze Delta table.
 
