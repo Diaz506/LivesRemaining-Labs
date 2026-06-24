@@ -189,9 +189,10 @@
 # MAGIC The DLT pipeline is defined in `src/dlt/bronze_pipeline.py`.
 # MAGIC
 # MAGIC In Databricks UI:
-# MAGIC 1. Go to **Workflows** → **Delta Live Tables**
-# MAGIC 2. Click **Create pipeline**
-# MAGIC 3. Enter pipeline details:
+# MAGIC 1. Click **+ New → ETL pipeline** (or **Jobs & Pipelines → Create → ETL
+# MAGIC    pipeline**). *DLT is now labeled "ETL pipeline"; older UIs called this
+# MAGIC    "Workflows → Delta Live Tables".*
+# MAGIC 2. Enter pipeline details:
 # MAGIC    - **Name**: `lives-remaining-bronze-ingestion`
 # MAGIC    - **Source code**: the `bronze_pipeline.py` in your Git folder
 # MAGIC      (e.g. `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`)
@@ -296,10 +297,9 @@ df_test.select("event_type").distinct().show()
 # MAGIC ## Part 7: Run DLT Pipeline
 # MAGIC
 # MAGIC In Databricks UI:
-# MAGIC 1. Go to **Workflows** → **Delta Live Tables**
-# MAGIC 2. Select pipeline: `lives-remaining-bronze-ingestion`
-# MAGIC 3. Click **Start** to run
-# MAGIC 4. Monitor progress in the DAG view:
+# MAGIC 1. Open **Jobs & Pipelines** and select `lives-remaining-bronze-ingestion`
+# MAGIC 2. Click **Start** (a.k.a. **Run pipeline** / **Run all** in the newer UI)
+# MAGIC 3. Monitor progress in the DAG view:
 # MAGIC    - `bronze_events` table creation
 # MAGIC    - Quality expectations (passing/failing rows)
 # MAGIC    - `events_quality_metrics` summary
@@ -411,7 +411,7 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC
 # MAGIC ### Issue: Expected data not showing up
 # MAGIC **Solution:**
-# MAGIC 1. Check DLT logs: Workflows → Delta Live Tables → Pipeline → Logs
+# MAGIC 1. Check DLT logs: Jobs & Pipelines → your pipeline → Logs / event log
 # MAGIC 2. Verify checkpoint: `dbutils.fs.ls("abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/")`
 # MAGIC 3. Check schema location: `dbutils.fs.ls("abfss://datalake@lrlstorage01.dfs.core.windows.net/.checkpoints/events/")`
 

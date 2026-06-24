@@ -94,7 +94,10 @@ failed pipeline run. Open `notebooks/dlt/01_ingest_bronze.py`, attach it to
 for you. Here you just register it and tell it *where the code is* and *which
 catalog/schema to write to*.
 
-**Workflows → Delta Live Tables → Create pipeline**:
+**Create the pipeline.** In the newer Databricks UI, click **+ New → ETL pipeline**
+(or **Jobs & Pipelines → Create → ETL pipeline**). *DLT is now labeled "ETL
+pipeline" / Lakeflow Declarative Pipelines — older docs call this "Workflows →
+Delta Live Tables".* Then set:
 
 | Setting | Value |
 |---------|-------|
@@ -111,7 +114,7 @@ Autoloader reads the new CSV, applies the quality expectations, and writes the
 Bronze Delta table. The first run is a cold start (reads everything); later runs
 only pick up new files.
 
-Click **Start**. DLT builds the graph and creates:
+Click **Start** (labeled **Run pipeline** / **Run all** in the newer UI). DLT builds the graph and creates:
 - `lives_remaining_raw_events` (Bronze table)
 - `events_quality_metrics`, `raw_events_summary` (monitoring)
 
