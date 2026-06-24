@@ -86,11 +86,17 @@ consistently.
    **`lrl-connector`**. Then on the storage account → **Access Control (IAM)** →
    assign **Storage Blob Data Contributor** to that Access Connector.
 
-### Step 2 — Attach a Unity Catalog metastore
+### Step 2 — Open the workspace & confirm a Unity Catalog metastore
 
-In the **Databricks Account console** (accounts.azuredatabricks.net) →
-**Catalog / Metastores**, create or attach a metastore in your region and assign
-it to your workspace. (Most new workspaces already have one.)
+From the Azure Portal → your **`lrl-workspace`** resource → click **Launch
+Workspace**. Once inside, open **Catalog** in the left nav. Modern Azure
+Databricks **auto-creates and attaches a metastore per region**, so you'll
+usually already see catalogs here — nothing more to do.
+
+> **Only if Catalog reports no metastore:** go to the **Databricks Account
+> console** (accounts.azuredatabricks.net) → **Catalog / Metastores**, create or
+> attach a metastore in your region, and assign it to `lrl-workspace`. (This
+> requires account-admin rights.)
 
 ### Step 3 — Bootstrap the catalog (run the setup notebook)
 
