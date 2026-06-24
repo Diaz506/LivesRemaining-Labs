@@ -11,9 +11,13 @@ Autoloader automatically:
 - Checkpoints processed files to prevent reprocessing
 - Handles late arrivals and duplicates
 
-Service Principal Authentication:
-- Databricks uses service principal credentials to authenticate with ADLS Gen2
-- Credentials must be configured in cluster init script or workspace secrets
+Storage access (Unity Catalog, serverless-friendly):
+- The pipeline reads ADLS Gen2 directly via an `abfss://` path governed by a
+  Unity Catalog external location + storage credential (an Azure Databricks
+  Access Connector / managed identity).
+- No DBFS mount or service-principal Spark config is required, so this pipeline
+  runs on serverless DLT compute. The external location is created by
+  `notebooks/setup/00_unity_catalog_setup.py`.
 """
 
 import dlt
@@ -55,6 +59,7 @@ def bronze_events():
     - Source: abfss://datalake@lrlstorage.dfs.core.windows.net/events/
     - Format: CSV with headers
     - Checkpoint: abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/
+    - Access: Unity Catalog external location (no mount, serverless-friendly)
     - Mode: Incrementally read new files only
     
     Expectations (Quality Checks):
@@ -65,10 +70,11 @@ def bronze_events():
     Drop rows that fail expectations (DLT default behavior with @dlt.expect_or_drop).
     """
     
-    # Mount point: /mnt/data should be created with ADLS Gen2 credentials
-    # See docs/setup-azure.md for mounting instructions
-    source_path = "/mnt/data/events/"
-    checkpoint_path = "/mnt/data/.checkpoints/events/"
+    # Read ADLS Gen2 directly via the Unity Catalog external location.
+    # No mount required — works on serverless DLT compute.
+    # See notebooks/setup/00_unity_catalog_setup.py for the external location.
+    source_path = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
+    checkpoint_path = "abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/"
     
     return (
         spark.readStream.format("cloudFiles")

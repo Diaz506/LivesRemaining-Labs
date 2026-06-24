@@ -24,34 +24,31 @@ The Bronze layer stores raw events *as-is* for audit and replay. DLT + Autoloade
 
 In the Databricks workspace: **Workspace → (your folder) → Create → Git folder**, point it at this repo. You should see `src/dlt/bronze_pipeline.py` and `notebooks/dlt/01_ingest_bronze.py`.
 
-### Step 2 — Give the cluster access to ADLS Gen2
+### Step 2 — Confirm Unity Catalog can reach ADLS Gen2
 
-The pipeline reads `/mnt/data/events/`. Mount ADLS Gen2 with the service principal **once** (run in a notebook attached to an all-purpose cluster):
+The pipeline reads `abfss://datalake@lrlstorage.dfs.core.windows.net/events/`
+directly through the Unity Catalog **external location** created in the
+[prerequisites](prerequisites.md) (`notebooks/setup/00_unity_catalog_setup.py`).
+There's **no mount and no service principal** to configure — UC's Access
+Connector (managed identity) handles storage auth, so this works on serverless.
+
+Quick check (run on serverless or any UC-enabled compute):
 
 ```python
-configs = {
-  "fs.azure.account.auth.type": "OAuth",
-  "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-  "fs.azure.account.oauth2.client.id": dbutils.secrets.get("lrl", "sp-client-id"),
-  "fs.azure.account.oauth2.client.secret": dbutils.secrets.get("lrl", "sp-secret"),
-  "fs.azure.account.oauth2.client.endpoint": "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token",
-}
-dbutils.fs.mount(
-  source="abfss://datalake@lrlstorage.dfs.core.windows.net/",
-  mount_point="/mnt/data",
-  extra_configs=configs,
-)
+EVENTS_PATH = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
+display(dbutils.fs.ls(EVENTS_PATH))
 ```
 
-> Prefer Unity Catalog external locations over mounts in production. For this lab the mount keeps `src/dlt/bronze_pipeline.py` simple (it reads `/mnt/data/events/`).
+> If this fails with access denied, re-run the UC setup notebook and confirm the
+> Access Connector has **Storage Blob Data Contributor** on the storage account.
 
 ### Step 3 — Verify data is reachable
 
-Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6, Steps 2–6). Expected:
+Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6, Steps 2–4). Expected:
 
 ```
-✅ Mount /mnt/data is ready!
-✅ Found 1 files in /mnt/data/events/:
+✅ External location is reachable: abfss://datalake@lrlstorage.dfs.core.windows.net/events/
+✅ Found 1 files in abfss://datalake@lrlstorage.dfs.core.windows.net/events/:
   - raw_events.csv
 ✅ Successfully read CSV! Shape: 100000 rows, 10 columns
 ```
@@ -66,7 +63,7 @@ Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6,
 | Source code | `…/src/dlt/bronze_pipeline.py` |
 | Destination | **Unity Catalog** → Catalog `labs`, Target schema `bronze` |
 | Pipeline mode | **Triggered** |
-| Cluster | Default job cluster (autoscale 1–2) |
+| Compute | **Serverless** (recommended) |
 
 ### Step 5 — Run the pipeline
 
@@ -101,8 +98,8 @@ Expect ~100k rows (minus any dropped by expectations) across all 6 event types.
 
 | Symptom | Fix |
 |---------|-----|
-| `Mount /mnt/data not found` | Re-run Step 2; verify the service principal secret scope. |
-| `No files found in /mnt/data/events/` | Re-run Lab 0 Step 5 (upload). |
+| `Operation failed` / access denied on `abfss://…` | Re-run the [UC bootstrap](prerequisites.md); verify the Access Connector has **Storage Blob Data Contributor**. |
+| `No files found in …/events/` | Re-run Lab 0 Step 5 (upload). |
 | `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md). |
 | Many rows dropped | Inspect failing expectation in the DLT UI → likely an unexpected `event_type`. |
 

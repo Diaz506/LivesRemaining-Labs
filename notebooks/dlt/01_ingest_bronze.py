@@ -14,7 +14,7 @@
 # MAGIC 1. **Delta Lake**: ACID-compliant data format (faster queries + reliability)
 # MAGIC 2. **DLT Autoloader**: Automatic incremental ingestion (only new files processed)
 # MAGIC 3. **Quality Expectations**: Data validation rules that catch schema errors
-# MAGIC 4. **Service Principal Auth**: Non-interactive identity for cloud access
+# MAGIC 4. **Unity Catalog Storage Access**: governed `abfss://` access via external locations (no mount)
 # MAGIC 5. **Azure ADLS Gen2**: Hierarchical cloud data lake storage
 
 # COMMAND ----------
@@ -22,8 +22,8 @@
 # MAGIC %md
 # MAGIC ## Prerequisites
 # MAGIC - ✅ Lab 0 completed (raw_events.csv uploaded to Azure)
-# MAGIC - ✅ ADLS Gen2 mounted in Databricks (`/mnt/data`)
-# MAGIC - ✅ Service principal credentials configured (Entra AAD)
+# MAGIC - ✅ Unity Catalog external location to ADLS Gen2 created (`notebooks/setup/00_unity_catalog_setup.py`)
+# MAGIC - ✅ Running on serverless (or UC-enabled) compute — no mount required
 # MAGIC - ✅ Cluster has appropriate compute (4-8 cores)
 
 # COMMAND ----------
@@ -148,7 +148,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Part 5: Azure Service Principal (Authentication)
+# MAGIC ## Part 5: Unity Catalog Storage Access (Authentication)
 # MAGIC
 # MAGIC **Problem:** How does Databricks authenticate with ADLS Gen2?
 # MAGIC
@@ -156,26 +156,28 @@
 # MAGIC - Requires human login (not suitable for automated jobs)
 # MAGIC - Scales poorly (one identity per person)
 # MAGIC
-# MAGIC **Solution 2: Service Principal** ✅
-# MAGIC - App identity (non-interactive)
-# MAGIC - Suitable for automated jobs
-# MAGIC - Credentials stored in Key Vault (secure)
-# MAGIC - Databricks cluster uses it automatically
+# MAGIC **Solution 2: DBFS mount + service principal** ⚠️ (legacy)
+# MAGIC - Works, but mounts are not supported on serverless compute
+# MAGIC - Requires juggling client id / secret / tenant in a secret scope
 # MAGIC
-# MAGIC ### Service Principal Setup Flow
+# MAGIC **Solution 3: Unity Catalog external location** ✅ (used here)
+# MAGIC - A storage credential wraps an Azure Databricks **Access Connector**
+# MAGIC   (managed identity) — no client secret to manage
+# MAGIC - UC governs `abfss://` access with grants; works on serverless compute
+# MAGIC - Created once in `notebooks/setup/00_unity_catalog_setup.py`
+# MAGIC
+# MAGIC ### UC Storage Access Setup Flow
 # MAGIC ```
-# MAGIC 1. Create app registration in Entra AAD
-# MAGIC    ├─ Get: Client ID, Tenant ID, Secret
-# MAGIC    └─ Store in Azure Key Vault (secure)
+# MAGIC 1. Create an Azure Databricks Access Connector (managed identity)
+# MAGIC    └─ Assign "Storage Blob Data Contributor" on the ADLS container
 # MAGIC
-# MAGIC 2. Assign Storage Blob roles to service principal
-# MAGIC    └─ "Storage Blob Data Contributor" on ADLS container
+# MAGIC 2. CREATE STORAGE CREDENTIAL (wraps the Access Connector)
 # MAGIC
-# MAGIC 3. Mount ADLS in Databricks using credentials
-# MAGIC    └─ Cluster automatically authenticates with service principal
+# MAGIC 3. CREATE EXTERNAL LOCATION 'abfss://datalake@lrlstorage...'
+# MAGIC    └─ UC now governs reads/writes via grants
 # MAGIC
-# MAGIC 4. DLT Autoloader uses mount automatically
-# MAGIC    └─ No additional configuration needed!
+# MAGIC 4. DLT Autoloader reads the abfss:// path directly
+# MAGIC    └─ No mount, no Spark config — serverless-friendly!
 # MAGIC ```
 
 # COMMAND ----------
@@ -197,17 +199,21 @@
 # MAGIC    - **Cluster**: Use existing or create job cluster
 # MAGIC    - **Mode**: Triggered (manual start, or scheduled)
 # MAGIC
-# MAGIC ### Step 2: Check Mount Configuration
+# MAGIC ### Step 2: Define the ADLS Gen2 source path
 # MAGIC
-# MAGIC Run this cell to verify ADLS mount exists:
+# MAGIC We read ADLS Gen2 directly through the Unity Catalog external location
+# MAGIC (no mount). Verify the external location is reachable:
 
 # COMMAND ----------
 
+EVENTS_PATH = "abfss://datalake@lrlstorage.dfs.core.windows.net/events/"
+
 try:
-    dbutils.fs.ls("/mnt/data")
-    print("✅ Mount /mnt/data is ready!")
-except:
-    print("❌ Mount /mnt/data not found. Run setup-azure.md to mount ADLS Gen2.")
+    dbutils.fs.ls(EVENTS_PATH.rsplit("/events/", 1)[0] + "/")
+    print(f"✅ External location is reachable: {EVENTS_PATH}")
+except Exception as e:
+    print("❌ Cannot reach the external location. Run notebooks/setup/00_unity_catalog_setup.py")
+    print(f"   and confirm the storage credential + external location exist. Details: {e}")
 
 # COMMAND ----------
 
@@ -217,12 +223,12 @@ except:
 # COMMAND ----------
 
 try:
-    files = dbutils.fs.ls("/mnt/data/events/")
-    print(f"✅ Found {len(files)} files in /mnt/data/events/:")
+    files = dbutils.fs.ls(EVENTS_PATH)
+    print(f"✅ Found {len(files)} files in {EVENTS_PATH}:")
     for f in files[:5]:
         print(f"  - {f.name}")
 except:
-    print("❌ No files found in /mnt/data/events/. Upload raw_events.csv using setup-azure.md.")
+    print(f"❌ No files found in {EVENTS_PATH}. Upload raw_events.csv (see Lab 0).")
 
 # COMMAND ----------
 
@@ -234,7 +240,7 @@ except:
 # COMMAND ----------
 
 # Read CSV with schema inference
-df_test = spark.read.option("header", "true").option("inferSchema", "true").csv("/mnt/data/events/raw_events.csv")
+df_test = spark.read.option("header", "true").option("inferSchema", "true").csv(EVENTS_PATH + "raw_events.csv")
 
 print(f"✅ Successfully read CSV! Shape: {df_test.count()} rows, {len(df_test.columns)} columns")
 print(f"\nColumns and types:")
@@ -343,7 +349,7 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC Autoloader is designed for incremental ingestion. To test:
 # MAGIC
 # MAGIC 1. **First run:** Ingest all rows (cold start)
-# MAGIC 2. **Upload new file** to `/mnt/data/events/new_events.csv`
+# MAGIC 2. **Upload new file** to `abfss://datalake@lrlstorage.dfs.core.windows.net/events/new_events.csv`
 # MAGIC 3. **Second run:** Only new file is processed (checkpoint prevents reprocessing)
 # MAGIC
 # MAGIC **Why this matters:**
@@ -382,10 +388,12 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC %md
 # MAGIC ## Part 11: Troubleshooting
 # MAGIC
-# MAGIC ### Issue: "Mount /mnt/data not found"
-# MAGIC **Solution:** Run docs/setup-azure.md to configure service principal credentials and mount ADLS
+# MAGIC ### Issue: "Cannot reach the external location" / access denied
+# MAGIC **Solution:** Run notebooks/setup/00_unity_catalog_setup.py to create the storage
+# MAGIC credential + external location, and confirm the Access Connector has
+# MAGIC "Storage Blob Data Contributor" on the storage account.
 # MAGIC
-# MAGIC ### Issue: "No files found in /mnt/data/events/"
+# MAGIC ### Issue: "No files found in .../events/"
 # MAGIC **Solution:** Upload raw_events.csv using Azure CLI or Azure Storage Explorer:
 # MAGIC ```bash
 # MAGIC azcopy copy "data/raw_events.csv" \
@@ -399,8 +407,8 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC ### Issue: Expected data not showing up
 # MAGIC **Solution:**
 # MAGIC 1. Check DLT logs: Workflows → Delta Live Tables → Pipeline → Logs
-# MAGIC 2. Verify checkpoint: `dbutils.fs.ls("/mnt/data/.checkpoints/")`
-# MAGIC 3. Check schema location: `dbutils.fs.ls("/mnt/data/.checkpoints/events/")`
+# MAGIC 2. Verify checkpoint: `dbutils.fs.ls("abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/")`
+# MAGIC 3. Check schema location: `dbutils.fs.ls("abfss://datalake@lrlstorage.dfs.core.windows.net/.checkpoints/events/")`
 
 # COMMAND ----------
 

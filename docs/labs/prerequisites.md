@@ -30,6 +30,15 @@ default for the labs and teaches the Unity Catalog concepts as you click. Use
 
 1. **Azure Databricks workspace** — Portal → *Create resource* → **Azure
    Databricks** → pricing tier **Premium** (required for Unity Catalog).
+   - **Workspace type → leave the default `Serverless`.** These labs read/write
+     **your own ADLS Gen2** through Unity Catalog **external locations**
+     (`abfss://…`, governed by the Access Connector below) and run on
+     **serverless compute / serverless DLT** — no DBFS mounts, custom clusters,
+     or service-principal Spark configs. Serverless *"uses Databricks-managed
+     default storage and serverless compute"* and lets you *"connect to your
+     cloud storage at any time"*, which is exactly the UC external-location
+     pattern these labs use. Pick **Hybrid** only if you later need custom
+     clusters, GPUs, or init scripts.
 2. **ADLS Gen2 storage** — Portal → *Create resource* → **Storage account** →
    enable **Hierarchical namespace** (this makes it ADLS Gen2). Create a
    container named `datalake`.
@@ -47,8 +56,8 @@ it to your workspace. (Most new workspaces already have one.)
 ### Step 3 — Bootstrap the catalog (run the setup notebook)
 
 Import this repo into the workspace (**Workspace → Create → Git folder**) and
-run **`notebooks/setup/00_unity_catalog_setup.py`** on a UC-enabled cluster. Set
-the widgets:
+run **`notebooks/setup/00_unity_catalog_setup.py`** on **serverless** (or any
+UC-enabled cluster). Set the widgets:
 
 | Widget | Example |
 |--------|---------|

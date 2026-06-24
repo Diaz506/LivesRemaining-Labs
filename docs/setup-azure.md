@@ -16,9 +16,9 @@ Throughout, the labs assume these names (change them consistently if you differ)
 | Region | `eastus` |
 | Storage account (ADLS Gen2) | `lrlstorage` |
 | Container | `datalake` |
-| Databricks secret scope | `lrl` |
+| Databricks Access Connector | `lrl-connector` (managed identity) |
 | Unity Catalog catalog | `labs` |
-| ADLS mount point | `/mnt/data` |
+| Unity Catalog external location | `abfss://datalake@lrlstorage.dfs.core.windows.net/` |
 
 ---
 
@@ -58,84 +58,54 @@ az databricks workspace create \
   --sku premium
 ```
 
+> **Creating via the Portal?** On the workspace creation blade you'll see a
+> **Workspace type** choice that defaults to **Serverless** — that's the
+> recommended choice for these labs. They read/write your own ADLS Gen2 through
+> **Unity Catalog external locations** (`abfss://…`) and run on **serverless
+> compute / serverless DLT**, so no custom clusters or DBFS mounts are needed.
+> (The legacy `/mnt/data` mount + service-principal approach is gone — UC's
+> Access Connector handles storage auth.) Pick **Hybrid** only if you later need
+> custom clusters, GPUs, or init scripts.
+
 Open the workspace from the Portal (or `az databricks workspace show … --query workspaceUrl`).
 
-## 4. Create an Entra service principal for automation
+## 4. Create an Access Connector for Unity Catalog
 
-Jobs and the ADLS mount authenticate as a **service principal** (not a human user).
-
-```bash
-az ad sp create-for-rbac --name "lrl-sp"
-# Note the output: appId (client id), password (secret), tenant
-```
-
-Grant it read access to the data lake:
+Unity Catalog reaches ADLS Gen2 through an **Azure Databricks Access Connector**
+(a managed identity) — **not** a service principal with a client secret. This is
+the only storage-auth identity you need; it works on serverless compute.
 
 ```bash
-SP_APP_ID="<appId>"
+az databricks access-connector create \
+  --name lrl-connector \
+  --resource-group lrl-rg \
+  --location eastus
+
+# Grant it access to the data lake
+CONNECTOR_ID=$(az databricks access-connector show -n lrl-connector -g lrl-rg --query id -o tsv)
+PRINCIPAL_ID=$(az databricks access-connector show -n lrl-connector -g lrl-rg --query identity.principalId -o tsv)
 STORAGE_ID=$(az storage account show -n lrlstorage -g lrl-rg --query id -o tsv)
 
 az role assignment create \
-  --assignee "$SP_APP_ID" \
+  --assignee-object-id "$PRINCIPAL_ID" \
+  --assignee-principal-type ServicePrincipal \
   --role "Storage Blob Data Contributor" \
   --scope "$STORAGE_ID"
+
+echo "Access Connector resource ID (use as access_connector_id widget): $CONNECTOR_ID"
 ```
 
-> **Unity Catalog note:** for the UC external location, UC uses an **Access
-> Connector** (managed identity), not this service principal. See
-> [`prerequisites.md`](labs/prerequisites.md) Step 1.3. The service principal
-> here is for the `/mnt/data` mount and job automation.
+> No secret scope, no `sp-client-id`/`sp-secret`/`sp-tenant-id`, no mount. The
+> setup notebook in the next step wraps this connector in a UC **storage
+> credential** + **external location**, and the pipelines read `abfss://…`
+> directly.
 
-## 5. Store secrets in a Databricks secret scope
-
-Never hard-code credentials in notebooks. Create a scope named `lrl` and add the
-service principal credentials (using the Databricks CLI):
-
-```bash
-databricks secrets create-scope lrl
-databricks secrets put-secret lrl sp-client-id   # paste appId
-databricks secrets put-secret lrl sp-secret      # paste password
-databricks secrets put-secret lrl sp-tenant-id   # paste tenant
-```
-
-The labs read these as `dbutils.secrets.get("lrl", "sp-client-id")`, etc.
-
-## 6. Mount ADLS Gen2 at `/mnt/data`
-
-`src/dlt/bronze_pipeline.py` reads `/mnt/data/events/`. Run this **once** in a
-notebook attached to an all-purpose cluster:
-
-```python
-configs = {
-  "fs.azure.account.auth.type": "OAuth",
-  "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
-  "fs.azure.account.oauth2.client.id": dbutils.secrets.get("lrl", "sp-client-id"),
-  "fs.azure.account.oauth2.client.secret": dbutils.secrets.get("lrl", "sp-secret"),
-  "fs.azure.account.oauth2.client.endpoint":
-      f"https://login.microsoftonline.com/{dbutils.secrets.get('lrl','sp-tenant-id')}/oauth2/v2.0/token",
-}
-
-# Idempotent: unmount first if it already exists
-if any(m.mountPoint == "/mnt/data" for m in dbutils.fs.mounts()):
-    dbutils.fs.unmount("/mnt/data")
-
-dbutils.fs.mount(
-  source="abfss://datalake@lrlstorage.dfs.core.windows.net/",
-  mount_point="/mnt/data",
-  extra_configs=configs,
-)
-
-display(dbutils.fs.ls("/mnt/data"))
-```
-
-> **Mounts vs. Unity Catalog:** mounts are the simplest way to keep the lab's
-> DLT code short. In production, prefer reading via a **UC external location**
-> (`abfss://…`) governed by a storage credential — see `prerequisites.md`.
-
-## 7. Bootstrap Unity Catalog
+## 5. Bootstrap Unity Catalog
 
 Run `notebooks/setup/00_unity_catalog_setup.py` to create the `labs` catalog, the
-`bronze`/`silver`/`gold` schemas, the external location, and grants. Verify:
+`bronze`/`silver`/`gold` schemas, the **storage credential + external location**
+(pass the Access Connector resource ID from step 4 as the `access_connector_id`
+widget), and grants. Verify:
 
 ```sql
 SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
@@ -147,10 +117,9 @@ SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
 
 - [ ] Resource group `lrl-rg` created
 - [ ] ADLS Gen2 `lrlstorage` with container `datalake`
-- [ ] Databricks **Premium** workspace running
-- [ ] Service principal `lrl-sp` with **Storage Blob Data Contributor**
-- [ ] Secret scope `lrl` populated (`sp-client-id`, `sp-secret`, `sp-tenant-id`)
-- [ ] `/mnt/data` mounted and listing the container
+- [ ] Databricks **Premium** workspace running (Serverless workspace type)
+- [ ] Access Connector `lrl-connector` with **Storage Blob Data Contributor**
+- [ ] UC storage credential + external location (`abfss://datalake@lrlstorage…`) created
 - [ ] `labs` catalog + `bronze`/`silver`/`gold` schemas exist
 
 **Next:** [Lab 0 — Sample data generation →](labs/lab-0-setup-data-generation.md)
