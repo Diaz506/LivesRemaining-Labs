@@ -196,7 +196,16 @@ created the medallion namespaces. If these schemas exist, every later lab can
 write to `labs.bronze.*`, `labs.silver.*`, and `labs.gold.*` without the
 "catalog/schema not found" error.
 
-Run this in a SQL cell (or the notebook):
+**Where to run it** — pick whichever is handiest:
+- **In the setup notebook:** add a new cell and prefix it with the SQL magic:
+  ```python
+  %sql
+  SHOW SCHEMAS IN labs;
+  ```
+  (Part 3 of the notebook already runs this, so you may already see the result.)
+- **SQL Editor:** left nav → **SQL Editor** → paste the query → **Run**.
+- **Catalog Explorer (no query):** left nav → **Catalog** → expand **`labs`** and
+  confirm the three schemas are listed.
 
 ```sql
 SHOW SCHEMAS IN labs;   -- expect bronze, silver, gold
