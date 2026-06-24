@@ -16,15 +16,25 @@ The pipelines in Labs 1–3 read raw CSV events from `abfss://datalake@<account>
 
 ---
 
-> 💻 **Where you run this lab.** Every command below runs on **your local
+> 🛣️ **Two ways to do this lab — pick one.**
+>
+> - **Option A — Local machine (Python + Azure CLI).** Generate the CSV on your
+>   laptop and push it to ADLS Gen2 with `az`. Good if you're comfortable with a
+>   local terminal and have the Azure CLI installed.
+> - **Option B — Databricks notebook (serverless).** Generate *and* upload entirely
+>   inside the workspace — no local Python, no `az login`. Recommended if you'd
+>   rather stay in Databricks.
+>
+> Both land the exact same `events/raw_events.csv`. Do **Option A _or_ Option B**,
+> then jump to [✅ Done when](#-done-when).
+
+## 🪜 Option A — Local machine (Python + Azure CLI)
+
+> 💻 **Where you run this.** Every command in Option A runs on **your local
 > machine** (a terminal on your laptop), **not** in the Databricks workspace.
 > You'll generate the CSV with Python, then push it to ADLS Gen2 with the Azure
 > CLI. Make sure you've run `az login` first so the `az storage` commands can
 > authenticate.
-
-## 🪜 Steps
-
-### Step 1 — Install local dependencies
 
 **What this step does and why.** The generator uses `faker` to invent realistic
 player names/values and `pandas` to write the CSV. Installing them locally lets
@@ -119,9 +129,74 @@ You should see `events/raw_events.csv`.
 
 ---
 
+## 🪜 Option B — Databricks notebook (serverless)
+
+> 🧪 **Where you run this.** Everything below runs **inside a Databricks notebook**
+> attached to **Serverless** compute — no local Python, no Azure CLI. It writes the
+> CSV straight into your Unity Catalog external location, so the managed identity on
+> your Access Connector handles auth (no mount, no service principal).
+>
+> Easiest setup: open this repo as a **Git folder** in the workspace
+> (**Workspace → Create → Git folder**) so `scripts/generate_events.py` is already
+> there, then create a new notebook next to it.
+
+### Step 1 — Install the generator's dependencies
+
+The generator uses `faker` (plus `pandas`/`numpy`); install them into the notebook
+session, then restart Python so the imports are picked up.
+
+```python
+%pip install faker numpy pandas
+dbutils.library.restartPython()
+```
+
+### Step 2 — Generate and upload in one cell
+
+`generate_events()` is pure Python (no Spark), so it runs on the serverless driver.
+We write the CSV to the driver's local `/tmp`, then `dbutils.fs.cp` copies it into
+the `events/` path through the external location.
+
+```python
+import sys, os
+sys.path.append(os.path.abspath("../../scripts"))   # path to scripts/generate_events.py
+from generate_events import generate_events
+import pandas as pd
+
+events = generate_events(num_events=100000, num_players=10000, days_back=30)
+df = pd.DataFrame(events)
+
+df.to_csv("/tmp/raw_events.csv", index=False)
+dbutils.fs.cp(
+    "file:/tmp/raw_events.csv",
+    "abfss://datalake@lrlstorage01.dfs.core.windows.net/events/raw_events.csv"
+)
+```
+
+> **Can't import `generate_events`?** The `../../scripts` path assumes the notebook
+> sits inside the repo's Git folder. If it doesn't, adjust the path, clone the repo
+> first, or paste the generator's functions into a cell.
+
+### Step 3 — Confirm the upload
+
+Lists the `events/` folder to prove the file landed — the equivalent of Option A's
+Step 6, but from the notebook.
+
+```python
+display(dbutils.fs.ls("abfss://datalake@lrlstorage01.dfs.core.windows.net/events/"))
+```
+
+You should see `raw_events.csv` (~12–15 MB) in the listing.
+
+> 💡 Prefer to skip the temp file? You can write with Spark instead —
+> `spark.createDataFrame(df).coalesce(1).write.option("header","true").csv("abfss://datalake@lrlstorage01.dfs.core.windows.net/events/")`
+> — but that produces `part-*.csv` files rather than a single `raw_events.csv`.
+> Lab 1's Autoloader reads either layout fine.
+
+---
+
 ## ✅ Done when
 
-- [ ] `data/raw_events.csv` exists locally with 100k rows
+- [ ] You generated 100k events (Option A: `data/raw_events.csv` locally; Option B: in the notebook)
 - [ ] `events/raw_events.csv` is present in the `datalake` container
 - [ ] The 6 event types and 4 regions appear in the summary
 
@@ -129,9 +204,11 @@ You should see `events/raw_events.csv`.
 
 | Symptom | Fix |
 |---------|-----|
-| `Error: Install dependencies...` when running the script | Run Step 1 (`pip install pandas faker numpy`). |
-| `az: command not found` | Install the Azure CLI, then run `az login`. |
-| Upload `403` / `AuthorizationPermissionMismatch` | Your identity needs the **Storage Blob Data Contributor** role on the storage account. Assign it in the Portal (Access control (IAM)) and retry. |
-| `ContainerNotFound` / filesystem missing | Create the `datalake` container first (prerequisites UI Step 1), then re-run Step 4/5. |
+| `Error: Install dependencies...` when running the script | Run the install step (`pip install pandas faker numpy`, or `%pip install` in Option B). |
+| `az: command not found` (Option A) | Install the Azure CLI, then run `az login`. |
+| `ModuleNotFoundError: faker` (Option B) | Re-run the `%pip install` cell, then `dbutils.library.restartPython()` before importing. |
+| `cannot import name 'generate_events'` (Option B) | The notebook isn't in the repo Git folder — fix the `sys.path.append(...)` path, or clone the repo. |
+| Upload `403` / `AuthorizationPermissionMismatch` | Option A: your identity needs **Storage Blob Data Contributor** on the storage account. Option B: the Access Connector's managed identity needs it (set during prerequisites Step 3). |
+| `ContainerNotFound` / filesystem missing | Create the `datalake` container first (prerequisites UI Step 1), then retry. |
 
 **Next:** [Lab 1 — Bronze ingestion →](lab-1-bronze-ingestion.md)
