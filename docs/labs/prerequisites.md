@@ -154,8 +154,12 @@ In the workspace, open **Catalog** (left nav) → **+ Add**:
    - Name: **`labs_datalake`**
    - URL: **`abfss://datalake@lrlstorage01.dfs.core.windows.net/`**
    - Storage credential: **`labs_storage_cred`**
-   - Click **Test connection** — it should succeed (proves the Access Connector
-     has Storage Blob Data Contributor on the account).
+   - Click **Test connection** — **Read / List / Write / Delete / Path Exists /
+     Hierarchical Namespace** should all pass. The **File Events** checks may show
+     **Failed** — that's **expected and safe to ignore**; file events are an
+     optional Autoloader optimization needing extra roles you don't need for this
+     lab. Click **Force create** (Autoloader falls back to directory listing,
+     which is fine at lab scale).
 
 #### 3b — Create the catalog, schemas & grants (setup notebook)
 
