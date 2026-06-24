@@ -14,6 +14,7 @@ Throughout, the labs assume these names (change them consistently if you differ)
 |-------|------------------------|
 | Resource group | `lrl-rg` |
 | Region | `eastus` |
+| Databricks workspace | `lrl-workspace` |
 | Storage account (ADLS Gen2) | `lrlstorage` |
 | Container | `datalake` |
 | Databricks Access Connector | `lrl-connector` (managed identity) |

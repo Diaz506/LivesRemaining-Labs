@@ -34,6 +34,7 @@ consistently.
 |----------|-----------------------|
 | Resource group | `lrl-rg` |
 | Region | `eastus` |
+| Databricks workspace | `lrl-workspace` (free to choose — no code references it) |
 | Storage account (ADLS Gen2) | `lrlstorage` |
 | Container | `datalake` |
 | Access Connector (managed identity) | `lrl-connector` |
@@ -55,7 +56,8 @@ consistently.
 ### Step 1 — Create the workspace & storage (Azure Portal)
 
 1. **Azure Databricks workspace** — Portal → *Create resource* → **Azure
-   Databricks** → pricing tier **Premium** (required for Unity Catalog).
+   Databricks**, name it **`lrl-workspace`** (any name works — no code depends on
+   it) → pricing tier **Premium** (required for Unity Catalog).
    - **Workspace type → leave the default `Serverless`.** These labs read/write
      **your own ADLS Gen2** through Unity Catalog **external locations**
      (`abfss://…`, governed by the Access Connector below) and run on
