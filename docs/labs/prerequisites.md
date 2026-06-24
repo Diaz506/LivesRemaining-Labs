@@ -137,8 +137,11 @@ open your **`lrl-connector`** Access Connector → **Overview** (or **Properties
 **Run it:**
 1. Import this repo into the workspace: **Workspace → Create → Git folder**,
    paste the repo URL.
-2. Open **`notebooks/setup/00_unity_catalog_setup.py`** and attach it to
-   **Serverless** (or any UC-enabled cluster).
+2. Open **`notebooks/setup/00_unity_catalog_setup.py`**. Opening it only shows
+   the code — you still need to attach compute: in the **top-right corner**,
+   click the **Connect** dropdown (it may say *Connect* or show a compute name)
+   → choose **Serverless** (or any UC-enabled cluster). Wait until it shows
+   connected/green.
 3. Fill in the widgets at the top, then **Run all**:
 
 | Widget | What to enter | Why |
