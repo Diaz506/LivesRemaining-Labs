@@ -22,6 +22,10 @@ The Bronze layer stores raw events *as-is* for audit and replay. DLT + Autoloade
 
 ### Step 1 — Import the repo into the workspace
 
+**What this step does and why.** Brings the pipeline code (`bronze_pipeline.py`)
+and the interactive walkthrough notebook into Databricks so the DLT pipeline can
+point at them. A **Git folder** keeps them in sync with `main`.
+
 In the Databricks workspace: **Workspace → (your folder) → Create → Git folder**, point it at this repo. You should see `src/dlt/bronze_pipeline.py` and `notebooks/dlt/01_ingest_bronze.py`.
 
 ### Step 2 — Confirm Unity Catalog can reach ADLS Gen2
@@ -49,7 +53,11 @@ display(dbutils.fs.ls(EVENTS_PATH))
 
 ### Step 3 — Verify data is reachable
 
-Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6, Steps 2–4). Expected:
+**What this step does and why.** Before building the pipeline, you confirm
+Databricks can actually *list and read* the CSV through the external location — so
+if something's wrong (missing file, bad grant), you catch it here instead of in a
+failed pipeline run. Open `notebooks/dlt/01_ingest_bronze.py`, attach it to
+**Serverless**, and run the verification cells (Part 6, Steps 2–4). Expected:
 
 ```
 ✅ External location is reachable: abfss://datalake@lrlstorage01.dfs.core.windows.net/events/
@@ -60,25 +68,39 @@ Open `notebooks/dlt/01_ingest_bronze.py` and run the verification cells (Part 6,
 
 ### Step 4 — Create the DLT pipeline
 
+**What this step does and why.** A DLT pipeline is the managed job that runs
+`bronze_pipeline.py` — it handles checkpoints, schema, expectations, and lineage
+for you. Here you just register it and tell it *where the code is* and *which
+catalog/schema to write to*.
+
 **Workflows → Delta Live Tables → Create pipeline**:
 
 | Setting | Value |
 |---------|-------|
 | Pipeline name | `lives-remaining-bronze-ingestion` |
-| Source code | `…/src/dlt/bronze_pipeline.py` |
+| Source code | `bronze_pipeline.py` in your Git folder (e.g. `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`) |
 | Destination | **Unity Catalog** → Catalog `labs`, Target schema `bronze` |
-| Pipeline mode | **Triggered** |
-| Compute | **Serverless** (recommended) |
+| Pipeline mode | **Triggered** (runs once on demand, vs. Continuous which streams non-stop) |
+| Compute | **Serverless** (recommended — no cluster to size) |
 
 ### Step 5 — Run the pipeline
+
+**What this step does and why.** Starting the pipeline executes the ingestion:
+Autoloader reads the new CSV, applies the quality expectations, and writes the
+Bronze Delta table. The first run is a cold start (reads everything); later runs
+only pick up new files.
 
 Click **Start**. DLT builds the graph and creates:
 - `lives_remaining_raw_events` (Bronze table)
 - `events_quality_metrics`, `raw_events_summary` (monitoring)
 
-Watch the graph go green. The three expectations (`valid_event_id`, `valid_player_id`, `valid_event_type` from `bronze_pipeline.py:47-49`) report pass/drop counts on the table node.
+Watch the graph go green. The three expectations (`valid_event_id`, `valid_player_id`, `valid_event_type` from `bronze_pipeline.py:51-53`) report pass/drop counts on the table node.
 
 ### Step 6 — Verify the Bronze table
+
+**What this step does and why.** Confirms the table landed with the expected row
+count and event-type spread — proof the ingestion worked end to end and that the
+expectations kept the good rows.
 
 In a SQL cell or notebook:
 
@@ -104,7 +126,7 @@ Expect ~100k rows (minus any dropped by expectations) across all 6 event types.
 | Symptom | Fix |
 |---------|-----|
 | `Operation failed` / access denied on `abfss://…` | Re-run the [UC bootstrap](prerequisites.md); verify the Access Connector has **Storage Blob Data Contributor**. |
-| `No files found in …/events/` | Re-run Lab 0 Step 5 (upload). |
+| `No files found in …/events/` | Re-run **Lab 0** to land `raw_events.csv` (Option A upload, or Option B notebook). |
 | `catalog/schema not found` | Run the [Unity Catalog bootstrap](prerequisites.md). |
 | Many rows dropped | Inspect failing expectation in the DLT UI → likely an unexpected `event_type`. |
 

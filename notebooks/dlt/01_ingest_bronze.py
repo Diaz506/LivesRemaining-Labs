@@ -23,8 +23,7 @@
 # MAGIC ## Prerequisites
 # MAGIC - ✅ Lab 0 completed (raw_events.csv uploaded to Azure)
 # MAGIC - ✅ Unity Catalog external location to ADLS Gen2 created (`notebooks/setup/00_unity_catalog_setup.py`)
-# MAGIC - ✅ Running on serverless (or UC-enabled) compute — no mount required
-# MAGIC - ✅ Cluster has appropriate compute (4-8 cores)
+# MAGIC - ✅ Running on **Serverless** (or any UC-enabled) compute — no mount, no cluster sizing required
 
 # COMMAND ----------
 
@@ -194,9 +193,10 @@
 # MAGIC 2. Click **Create pipeline**
 # MAGIC 3. Enter pipeline details:
 # MAGIC    - **Name**: `lives-remaining-bronze-ingestion`
-# MAGIC    - **Path**: `/Workspace/src/dlt/bronze_pipeline.py`
-# MAGIC    - **Target schema**: `bronze` (Unity Catalog: `labs.bronze`)
-# MAGIC    - **Cluster**: Use existing or create job cluster
+# MAGIC    - **Source code**: the `bronze_pipeline.py` in your Git folder
+# MAGIC      (e.g. `/Workspace/Users/<you>/LivesRemaining-Labs/src/dlt/bronze_pipeline.py`)
+# MAGIC    - **Destination**: Unity Catalog → Catalog `labs`, Target schema `bronze`
+# MAGIC    - **Compute**: **Serverless** (recommended — no cluster to size)
 # MAGIC    - **Mode**: Triggered (manual start, or scheduled)
 # MAGIC
 # MAGIC ### Step 2: Define the ADLS Gen2 source path
@@ -394,12 +394,10 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC "Storage Blob Data Contributor" on the storage account.
 # MAGIC
 # MAGIC ### Issue: "No files found in .../events/"
-# MAGIC **Solution:** Upload raw_events.csv using Azure CLI or Azure Storage Explorer:
-# MAGIC ```bash
-# MAGIC azcopy copy "data/raw_events.csv" \
-# MAGIC   "https://lrlstorage01.blob.core.windows.net/datalake/events/" \
-# MAGIC   --recursive
-# MAGIC ```
+# MAGIC **Solution:** Land `raw_events.csv` first by completing **Lab 0**:
+# MAGIC - **Option A (local):** `az storage fs file upload` / `azcopy` from your machine.
+# MAGIC - **Option B (notebook):** run `notebooks/setup/01_generate_events.py` on
+# MAGIC   serverless — it writes straight to `events/` via Spark (no local files).
 # MAGIC
 # MAGIC ### Issue: DLT pipeline fails with schema mismatch
 # MAGIC **Solution:** Use explicit schema (not inferSchema). See bronze_pipeline.py for schema definition.
@@ -420,7 +418,8 @@ FROM labs.bronze.lives_remaining_raw_events
 # MAGIC - Delta Lake: ACID tables with time travel
 # MAGIC - DLT: Declarative ETL with automatic checkpoint/schema handling
 # MAGIC - Autoloader: Incremental cloud file ingestion
-# MAGIC - Service Principal: Non-interactive auth for Azure resources
+# MAGIC - Unity Catalog external locations: governed `abfss://` access via a managed
+# MAGIC   identity (Access Connector) — no mount, no service principal, serverless-ready
 # MAGIC
 # MAGIC ✅ **Built:**
 # MAGIC - DLT pipeline: `src/dlt/bronze_pipeline.py`
