@@ -178,8 +178,11 @@ def generate_events(num_events=100000, num_players=10000, days_back=30):
 # MAGIC %md
 # MAGIC ## Step 4 — Generate, then upload to the external location
 # MAGIC
-# MAGIC Write the CSV to the driver's local `/tmp`, then `dbutils.fs.cp` copies it into
-# MAGIC `events/` through the Unity Catalog external location (managed-identity auth).
+# MAGIC On **serverless**, `dbutils.fs` can't read the driver's local `/tmp`
+# MAGIC (`LocalFilesystemAccessDeniedException`). So instead of a temp file, we build a
+# MAGIC Spark DataFrame and write it **directly** to the external location. Spark emits
+# MAGIC a `part-*.csv`, which we then rename to a clean `raw_events.csv` (Lab 1's
+# MAGIC Autoloader actually reads the whole `events/` folder, so either name works).
 
 # COMMAND ----------
 
@@ -188,9 +191,20 @@ import pandas as pd
 events = generate_events(num_events, num_players, days_back)
 df = pd.DataFrame(events)
 
-local_path = "/tmp/raw_events.csv"
-df.to_csv(local_path, index=False)
-dbutils.fs.cp(f"file:{local_path}", target_file)
+# Write directly to cloud storage via Spark (serverless-safe — no local FS).
+tmp_dir = f"{events_uri}/_tmp_raw"
+(
+    spark.createDataFrame(df)
+    .coalesce(1)
+    .write.mode("overwrite")
+    .option("header", "true")
+    .csv(tmp_dir)
+)
+
+# Spark writes part-*.csv inside tmp_dir; move the single part to a clean filename.
+part = [f.path for f in dbutils.fs.ls(tmp_dir) if f.name.endswith(".csv")][0]
+dbutils.fs.mv(part, target_file)
+dbutils.fs.rm(tmp_dir, recurse=True)
 
 print(f"\n✅ Uploaded {len(df):,} events to {target_file}")
 print(f"  Unique players: {df['player_id'].nunique():,}")

@@ -157,7 +157,7 @@ The notebook is split into separate cells **on purpose**:
 | Install deps | `%pip install faker numpy pandas` + `dbutils.library.restartPython()` | `restartPython()` **restarts the interpreter and wipes all variables** — so it must run *before*, and *separate from*, any generation code. `%pip` is a notebook magic, not Python, so it can't live in a `.py` module. |
 | Parameters | Widgets for `storage_account`, `container`, counts | Lets you change volume without editing code. |
 | Generator | Pure-Python event functions | No Spark needed; runs on the serverless driver. |
-| Generate + upload | Builds the DataFrame, writes `/tmp/raw_events.csv`, `dbutils.fs.cp` → `events/` | The hand-off from notebook memory to cloud storage. |
+| Generate + upload | Builds the DataFrame and writes it **directly to the external location** via Spark, then renames the part file to `raw_events.csv` | The hand-off from notebook memory to cloud storage. |
 | Confirm | `dbutils.fs.ls(...)` the `events/` folder | Proves the file landed. |
 
 When the **Confirm** cell lists `raw_events.csv` (~12–15 MB), you're done.
@@ -168,10 +168,12 @@ When the **Confirm** cell lists `raw_events.csv` (~12–15 MB), you're done.
 > plain importable module; the notebook owns the install + restart step. And the
 > restart must be isolated so it doesn't erase the work in later cells.
 
-> 💡 Prefer to skip the temp file? You can write with Spark instead —
-> `spark.createDataFrame(df).coalesce(1).write.option("header","true").csv("abfss://datalake@lrlstorage01.dfs.core.windows.net/events/")`
-> — but that produces `part-*.csv` files rather than a single `raw_events.csv`.
-> Lab 1's Autoloader reads either layout fine.
+> ⚠️ **Why write via Spark instead of a local temp file?** On serverless,
+> `dbutils.fs` can't read the driver's local filesystem (`file:/tmp/...` →
+> `LocalFilesystemAccessDeniedException`). Writing straight to `abfss://…/events/`
+> with Spark avoids the local FS entirely. Spark emits a `part-*.csv`, which the
+> notebook renames to a clean `raw_events.csv` — though Lab 1's Autoloader reads the
+> whole `events/` folder, so either name works.
 
 ---
 
@@ -189,6 +191,7 @@ When the **Confirm** cell lists `raw_events.csv` (~12–15 MB), you're done.
 | `az: command not found` (Option A) | Install the Azure CLI, then run `az login`. |
 | `ModuleNotFoundError: faker` (Option B) | Re-run the `%pip install` cell, then `dbutils.library.restartPython()`, before running later cells. |
 | Variables "undefined" after the install cell (Option B) | Expected — `restartPython()` clears the session. Just run the cells below it again, top to bottom. |
+| `LocalFilesystemAccessDeniedException: Cannot access non /Workspace local filesystem path` (Option B) | Serverless blocks `dbutils.fs` access to the driver's `/tmp`. Use the Spark-direct write in the current notebook (don't write to `file:/tmp` then `dbutils.fs.cp`). Pull the latest notebook if yours still uses a temp file. |
 | Upload `403` / `AuthorizationPermissionMismatch` | Option A: your identity needs **Storage Blob Data Contributor** on the storage account. Option B: the Access Connector's managed identity needs it (set during prerequisites Step 3). |
 | `ContainerNotFound` / filesystem missing | Create the `datalake` container first (prerequisites UI Step 1), then retry. |
 
