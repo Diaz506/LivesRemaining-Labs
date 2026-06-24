@@ -142,15 +142,24 @@ open your **`lrl-connector`** Access Connector → **Overview** (or **Properties
    click the **Connect** dropdown (it may say *Connect* or show a compute name)
    → choose **Serverless** (or any UC-enabled cluster). Wait until it shows
    connected/green.
-3. Fill in the widgets at the top, then **Run all**:
+3. Fill in the widgets — these appear as **input boxes at the top of the
+   notebook** (above the first cell). **Edit the boxes, not the code.** The
+   defaults already match this lab (`labs` / `lrlstorage01` / `datalake`), so the
+   **only value you must add is `access_connector_id`** — paste the Resource ID
+   you copied above. Then **Run all**.
 
 | Widget | What to enter | Why |
 |--------|---------------|-----|
-| `catalog` | `labs` | Top-level catalog name the labs expect. |
-| `storage_account` | `lrlstorage01` | Builds the `abfss://` URL for the external location. |
-| `container` | `datalake` | The container you created in Step 1. |
-| `access_connector_id` | the Resource ID you copied above | Lets UC authenticate to ADLS Gen2. |
+| `catalog` | `labs` *(default — leave as-is)* | Top-level catalog name the labs expect. |
+| `storage_account` | `lrlstorage01` *(default — leave as-is)* | Builds the `abfss://` URL for the external location. |
+| `container` | `datalake` *(default — leave as-is)* | The container you created in Step 1. |
+| `access_connector_id` | **the Resource ID you copied above (required)** | Lets UC authenticate to ADLS Gen2. |
 | `job_principal` | *(optional)* a group or service principal | Grants pipeline access to that identity; leave blank to skip grants. |
+
+> ⚠️ **`access_connector_id` is essential.** If you leave it empty, the notebook
+> **skips** creating the storage credential + external location, and Lab 1 will
+> later fail to read from ADLS Gen2. The other defaults only need changing if you
+> used different names in Step 1.
 
 As it runs you'll see it print the catalog, container URI, and "External location
 … ready", then list the `bronze` / `silver` / `gold` schemas.
